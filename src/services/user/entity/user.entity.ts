@@ -14,28 +14,28 @@ export class User extends CommonColumns {
   username: string;
 
   @Column({ type: 'varchar' })
-  first_name: string;
+  first_name?: string;
 
   @Column({ type: 'varchar' })
-  last_name: string;
+  last_name?: string;
 
   @Column({ type: 'varchar', unique: true })
   email: string;
 
   @Column({ type: 'varchar', unique: true })
-  phone: string;
+  phone?: string;
 
   @Column({ type: 'varchar' })
   password_hash: string;
 
   @Column({ type: 'varchar', nullable: true, default: null })
-  refresh_token: string;
+  refresh_token?: string;
 
   @Column({ type: 'varchar', nullable: true, default: null })
-  access_token: string;
+  access_token?: string;
 
   @Column({ type: 'varchar', nullable: true, name: 'avatar', default: null })
-  avatar: string;
+  avatar?: string;
 
   // @OneToMany(() => Order, (orders) => orders.user)
   // @JoinColumn({ name: 'order_id', referencedColumnName: 'id' })
