@@ -1,12 +1,10 @@
-import { DataSource, DataSourceOptions } from 'typeorm';
-
 import { registerAs } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { config as dotenvConfig } from 'dotenv';
 
 dotenvConfig({ path: '.env' });
 
-export const databaseConfig: TypeOrmModuleOptions = {
+const databaseConfig: TypeOrmModuleOptions = {
   type: 'postgres',
   url: process.env.DB_URL,
   synchronize: true,
@@ -15,6 +13,3 @@ export const databaseConfig: TypeOrmModuleOptions = {
 };
 
 export default registerAs('typeorm', () => databaseConfig);
-export const connectionSource = new DataSource(
-  databaseConfig as DataSourceOptions,
-);
