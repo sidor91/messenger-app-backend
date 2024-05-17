@@ -7,7 +7,7 @@ import {
   IsString,
 } from 'class-validator';
 
-export class AuthUserDto {
+export class UserRegisterDto {
   @ApiProperty({
     example: 'username',
     description: 'Username',
@@ -39,6 +39,40 @@ export class AuthUserDto {
   @IsOptional()
   @IsPhoneNumber()
   readonly phone: string;
+
+  @ApiProperty({
+    example: 'John',
+    description: 'First name',
+  })
+  @IsOptional()
+  @IsString()
+  readonly first_name: string;
+
+  @ApiProperty({
+    example: 'Smith',
+    description: 'Last name',
+  })
+  @IsOptional()
+  @IsString()
+  readonly last_name: string;
+}
+
+export class CurrentUserDto {
+  @ApiProperty({
+    example: 'login',
+    description: 'User name or email',
+  })
+  @IsNotEmpty({ message: 'Must be fulfilled!' })
+  @IsString({ message: 'Login must be string!' })
+  readonly login: string;
+
+  @ApiProperty({
+    example: 'P@ssword_1234',
+    description: 'Password',
+  })
+  @IsNotEmpty({ message: 'Must be fulfilled!' })
+  @IsString({ message: 'Password must be string!' })
+  readonly password: string;
 }
 
 // export class AuthUserResponseDto {
