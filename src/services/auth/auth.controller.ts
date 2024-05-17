@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+
 import { AuthService } from './auth.service';
 import { CurrentUserDto, UserRegisterDto } from './dto/register.dto';
 

@@ -1,15 +1,17 @@
 import {
-  Inject,
-  Injectable,
   forwardRef,
   HttpException,
   HttpStatus,
+  Inject,
+  Injectable,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcrypt';
+
 import { User } from '../user/entity/user.entity';
+import { UserService } from '../user/user.service';
+
 import { UserRegisterDto } from './dto/register.dto';
 
 @Injectable()
@@ -80,20 +82,23 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 
-  async validateUser(dto: { login: string, password: string }) {
+  async validateUser(dto: { login: string; password: string }) {
     const { login, password } = dto;
 
-    const user = await this.userService.findOne([{ email: login }, { username: login }]);
+    const user = await this.userService.findOne([
+      { email: login },
+      { username: login },
+    ]);
 
-     if (user) {
-       const isPasswordValid = await bcrypt.compare(
-         password,
-         user.password_hash,
-       );
-       if (isPasswordValid) {
-         return user;
-       }
-     }
+    if (user) {
+      const isPasswordValid = await bcrypt.compare(
+        password,
+        user.password_hash,
+      );
+      if (isPasswordValid) {
+        return user;
+      }
+    }
     return null;
   }
 }
