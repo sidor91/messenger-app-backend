@@ -1,15 +1,12 @@
 import {
-  forwardRef,
   HttpException,
   HttpStatus,
-  Inject,
   Injectable,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
-import { User } from '../user/entity/user.entity';
 import { UserService } from '../user/user.service';
 
 import { UserRegisterDto } from './dto/register.dto';
@@ -17,69 +14,67 @@ import { UserRegisterDto } from './dto/register.dto';
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private configService: ConfigService,
     private jwtService: JwtService,
   ) {}
 
+  async hashPassword(password: string) {
+    const saltRounds = this.configService.get<string>('SALT_ROUNDS');
+    return await bcrypt.hash(password, Number(saltRounds));
+  }
+
+  async validatePassword(password: string, password_hash: string) {
+    return await bcrypt.compare(password, password_hash);
+  }
+
+  async generateAccessToken(id: string, password: string): Promise<string> {
+    const payload = { id, password };
+    return this.jwtService.sign(payload);
+  }
+
+  async generateRefreshToken(email: string, password: string): Promise<string> {
+    const payload = { email, password };
+    return this.jwtService.sign(payload);
+  }
+
   async register(dto: UserRegisterDto) {
-    const {
-      username,
-      email,
-      password,
-      phone = '',
-      first_name = '',
-      last_name = '',
-    } = dto;
+    const { username, email, password, ...restDto } = dto;
 
-    const currentUser = await this.userService.findOne({ username, email });
+    const isExists = await this.userService.findOne([{ email }, { username }]);
 
-    if (currentUser)
+    if (isExists)
       throw new HttpException(
         'User with such email or username is already exists',
         HttpStatus.BAD_REQUEST,
       );
 
-    const saltRounds = this.configService.get<string>('SALT_ROUNDS');
-    const password_hash = await bcrypt.hash(password, Number(saltRounds));
+    const password_hash = await this.hashPassword(password);
 
-    const access_token = await this.generateAccessToken({
-      ...dto,
-      password_hash,
-    });
-    const refresh_token = await this.generateRefreshToken({
-      ...dto,
-      password_hash,
-    });
-
-    const user = {
+    const newUser = await this.userService.create({
       username,
       email,
       password_hash,
-      phone,
-      first_name,
-      last_name,
-      access_token,
-      refresh_token,
-    };
+      ...restDto,
+    });
 
-    await this.userService.create(user);
+    const access_token = await this.generateAccessToken(
+      newUser.id,
+      password_hash,
+    );
+    const refresh_token = await this.generateRefreshToken(email, password_hash);
+
+    const { password_hash: saved_password, ...userData } =
+      await this.userService.create({
+        ...newUser,
+        access_token,
+        refresh_token,
+      });
 
     return {
       success: true,
-      data: { access_token, refresh_token },
+      data: userData,
     };
-  }
-
-  async generateAccessToken(user: User): Promise<string> {
-    const payload = { username: user.username, sub: user.password_hash };
-    return this.jwtService.sign(payload);
-  }
-
-  async generateRefreshToken(user: User): Promise<string> {
-    const payload = { username: user.email, sub: user.password_hash };
-    return this.jwtService.sign(payload);
   }
 
   async validateUser(dto: { login: string; password: string }) {
@@ -90,15 +85,21 @@ export class AuthService {
       { username: login },
     ]);
 
-    if (user) {
-      const isPasswordValid = await bcrypt.compare(
-        password,
-        user.password_hash,
+    if (!user)
+      throw new HttpException(
+        'There are no user with such email, username or phone number',
+        HttpStatus.BAD_REQUEST,
       );
-      if (isPasswordValid) {
-        return user;
-      }
+
+    const isPasswordValid = await this.validatePassword(
+      password,
+      user.password_hash,
+    );
+
+    if (isPasswordValid) {
+      return { success: true, data: user };
+    } else {
+      throw new HttpException('Password is wrong', HttpStatus.BAD_REQUEST);
     }
-    return null;
   }
 }

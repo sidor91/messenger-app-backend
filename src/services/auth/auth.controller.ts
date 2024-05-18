@@ -1,8 +1,10 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Bind, Body, Controller, Get, Post, Query, Request, UseGuards } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { AuthService } from './auth.service';
-import { CurrentUserDto, UserRegisterDto } from './dto/register.dto';
+import { UserRegisterDto, UserAuthResponseDto } from './dto/register.dto';
+import { ValidateDto } from './dto/login.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Auth API')
 @Controller('auth')
@@ -10,9 +12,9 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
   @Post('/register')
   @ApiOperation({ summary: 'Register user' })
-  // @ApiResponse({
-  //   type: AuthUserResponseDto,
-  // })
+  @ApiResponse({
+    type: UserAuthResponseDto,
+  })
   // @Public()
   async register(
     @Body() userDto: UserRegisterDto,
@@ -21,9 +23,14 @@ export class AuthController {
     return this.authService.register(userDto);
   }
 
-  @Get('/current-user')
-  @ApiOperation({ summary: 'Get current user' })
-  async getCurrentUser(@Query() getCurrentUserDto: CurrentUserDto) {
+  @Get('/login')
+  @ApiOperation({ summary: 'Login user' })
+  @ApiResponse({
+    type: UserAuthResponseDto,
+  })
+  async getCurrentUser(
+    @Query() getCurrentUserDto: ValidateDto,
+  ) {
     return this.authService.validateUser(getCurrentUserDto);
   }
 }
