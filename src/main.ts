@@ -14,7 +14,7 @@ async function bootstrap() {
     .setDescription('REST API documentation')
     .setVersion('1.0.0')
     .addTag('Documentation')
-    // .addBearerAuth()
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

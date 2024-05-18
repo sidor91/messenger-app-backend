@@ -1,10 +1,12 @@
-import { Bind, Body, Controller, Get, Post, Query, Request, UseGuards } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Bind, Body, Controller, Get, Post, Query, Req, Request, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { AuthService } from './auth.service';
+import { AuthService, ValidateUser } from './auth.service';
 import { UserRegisterDto, UserAuthResponseDto } from './dto/register.dto';
-import { ValidateDto } from './dto/login.dto';
+import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { User } from '../user/entity/user.entity';
+import { JwtAuthGuard } from 'src/@guards/jwt-auth.guard';
 
 @ApiTags('Auth API')
 @Controller('auth')
@@ -28,9 +30,29 @@ export class AuthController {
   @ApiResponse({
     type: UserAuthResponseDto,
   })
-  async getCurrentUser(
-    @Query() getCurrentUserDto: ValidateDto,
-  ) {
-    return this.authService.validateUser(getCurrentUserDto);
+  async login(@Query() loginDto: LoginDto) {
+    return this.authService.login(loginDto);
+  }
+
+  @Get('/refresh')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Refresh tokens' })
+  @ApiResponse({
+    type: User,
+  })
+  refresh(@Req() request: any) {
+    return this.authService.refreshTokens(request.user);
+  }
+
+  @Get('/current')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Current user' })
+  @ApiResponse({
+    type: User,
+  })
+  current() {
+    return this.authService.current();
   }
 }
