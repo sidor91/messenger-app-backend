@@ -5,6 +5,7 @@ import {
 } from 'typeorm';
 
 import { CommonColumns } from 'src/common/entities/common.entity';
+import { PartialType } from '@nestjs/swagger';
 // import { Order } from 'src/order/entities/order.entity';
 // import { Transaction } from 'src/transaction/entities/transaction.entity';
 
@@ -13,29 +14,34 @@ export class User extends CommonColumns {
   @Column({ type: 'varchar', unique: true })
   username: string;
 
-  @Column({ type: 'varchar' })
-  first_name?: string;
-
-  @Column({ type: 'varchar' })
-  last_name?: string;
-
   @Column({ type: 'varchar', unique: true })
   email: string;
 
-  @Column({ type: 'varchar', unique: true })
-  phone?: string;
-
   @Column({ type: 'varchar' })
   password_hash: string;
+
+  @Column({ type: 'varchar', nullable: true, default: null })
+  first_name?: string;
+
+  @Column({ type: 'varchar', nullable: true, default: null })
+  last_name?: string;
+
+  @Column({
+    type: 'varchar',
+    unique: true,
+    nullable: true,
+    default: null,
+  })
+  phone?: string;
+
+  @Column({ type: 'varchar', nullable: true, default: null })
+  avatar?: string;
 
   @Column({ type: 'varchar', nullable: true, default: null })
   refresh_token?: string;
 
   @Column({ type: 'varchar', nullable: true, default: null })
   access_token?: string;
-
-  @Column({ type: 'varchar', nullable: true, name: 'avatar', default: null })
-  avatar?: string;
 
   // @OneToMany(() => Order, (orders) => orders.user)
   // @JoinColumn({ name: 'order_id', referencedColumnName: 'id' })
@@ -45,3 +51,5 @@ export class User extends CommonColumns {
   // @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
   // transactions: Transaction;
 }
+
+export class UpdateUserDto extends PartialType(User) {}
