@@ -1,58 +1,79 @@
-import { Bind, Body, Controller, Get, Post, Query, Req, Request, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
-import { AuthService, ValidateUser } from './auth.service';
-import { UserRegisterDto, UserAuthResponseDto } from './dto/register.dto';
+import { AuthService } from './auth.service';
+import { UserRegisterDto, UserRegisterResponseDto } from './dto/register.dto';
+import { RefreshTokenResponseDto } from './dto/refresh-token.dto';
 import { LoginDto } from './dto/login.dto';
-import { AuthGuard } from '@nestjs/passport';
 import { User } from '../user/entity/user.entity';
-import { JwtAuthGuard } from 'src/@guards/jwt-auth.guard';
+import { Public } from 'src/@decorators/public.decorator';
+import { GetCurrentUserId } from 'src/@decorators/getCurrentUserId.decorator';
+import { JwtRefreshAuthGuard } from 'src/@guards/jwt-refresh-auth.guard';
+import { Response } from 'express';
 
 @ApiTags('Auth API')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
   @Post('/register')
+  @Public()
   @ApiOperation({ summary: 'Register user' })
   @ApiResponse({
-    type: UserAuthResponseDto,
+    type: UserRegisterResponseDto,
   })
-  // @Public()
   async register(
     @Body() userDto: UserRegisterDto,
-    // @Res({ passthrough: true }) response: Response,
+    @Res({ passthrough: true }) response: Response,
   ) {
-    return this.authService.register(userDto);
+    return this.authService.register(userDto, response);
   }
 
-  @Get('/login')
+  @Post('/login')
+  @Public()
   @ApiOperation({ summary: 'Login user' })
   @ApiResponse({
-    type: UserAuthResponseDto,
+    type: UserRegisterResponseDto,
   })
-  async login(@Query() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    return this.authService.login(loginDto, response);
   }
 
   @Get('/refresh')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @Public()
+  @UseGuards(JwtRefreshAuthGuard)
   @ApiOperation({ summary: 'Refresh tokens' })
   @ApiResponse({
-    type: User,
+    type: RefreshTokenResponseDto,
   })
-  refresh(@Req() request: any) {
-    return this.authService.refreshTokens(request.user);
+  refresh(@Req() request: any, @Res({ passthrough: true }) response: Response) {
+    return this.authService.refreshTokens(request.user, response);
   }
 
   @Get('/current')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Current user' })
   @ApiResponse({
     type: User,
   })
-  current() {
-    return this.authService.current();
+  current(@GetCurrentUserId() userId: string) {
+    return userId;
   }
 }

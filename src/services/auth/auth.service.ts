@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -7,8 +12,9 @@ import { UserService } from '../user/user.service';
 
 import { UserRegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { Response } from 'express';
 
-export type ValidateUser = { [login: string]: string, password_hash: string }
+type ValidateUser = { [login: string]: string; password_hash: string };
 
 @Injectable()
 export class AuthService {
@@ -31,7 +37,7 @@ export class AuthService {
     id: string;
     password_hash: string;
   }): Promise<string> {
-    return this.jwtService.sign(payload, { expiresIn: 30 });
+    return this.jwtService.sign(payload, { expiresIn: 300 });
   }
 
   async generateRefreshToken(payload: {
@@ -56,7 +62,16 @@ export class AuthService {
     return { access_token, refresh_token };
   }
 
-  async register(dto: UserRegisterDto) {
+  setCookies(token: string, response: Response) {
+    response.cookie('refreshToken', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+  }
+
+  async register(dto: UserRegisterDto, response: Response) {
     const { username, email, password, ...restDto } = dto;
 
     const isExists = await this.userService.findOne([{ email }, { username }]);
@@ -82,24 +97,31 @@ export class AuthService {
       password_hash,
     });
 
-    const { password_hash: saved_password, ...userData } =
-      await this.userService.create({
-        ...newUser,
-        ...tokens,
-      });
+    const {
+      password_hash: saved_password,
+      access_token,
+      refresh_token,
+      ...userData
+    } = await this.userService.create({
+      ...newUser,
+      ...tokens,
+    });
+
+    this.setCookies(refresh_token, response);
 
     return {
       success: true,
-      data: userData,
+      data: { ...userData, tokens },
     };
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, response: Response) {
     const { login, password } = dto;
 
     const user = await this.userService.findOne([
       { email: login },
       { username: login },
+      { phone: login },
     ]);
 
     if (!user)
@@ -125,37 +147,43 @@ export class AuthService {
       password_hash,
     });
 
-    const { password_hash: saved_password, ...userData } =
-      await this.userService.create({
-        ...user,
-        ...newTokens,
-      });
+    const {
+      password_hash: saved_password,
+      access_token,
+      refresh_token,
+      ...userData
+    } = await this.userService.create({
+      ...user,
+      ...newTokens,
+    });
+
+    this.setCookies(refresh_token, response);
 
     return {
       success: true,
-      data: userData,
+      data: { ...userData, tokens: newTokens },
     };
   }
 
-  async validateUser(payload: ValidateUser) {
-    const { id, email, password_hash } = payload;
-    const validationPayload: any = { password_hash };
-    if (id) validationPayload.id = id;
-    if (email) validationPayload.email = email;
-    
-    const user = await this.userService.findOne(validationPayload);
-    if (user && user.password_hash === password_hash) {
-      return user;
+  async validateUser(payload: { id: string; password_hash: string }) {
+    const user = await this.userService.findOne(payload);
+
+    if (!user || user.password_hash !== payload.password_hash) {
+      return false;
     }
-    return false;
+
+    return user;
   }
 
-  async refreshTokens(payload?: ValidateUser) {
-    const { email, password_hash } = payload;
+  async refreshTokens(
+    payload: { email: string; password_hash: string; refresh_token: string },
+    response: Response,
+  ) {
+    const { email, password_hash, refresh_token } = payload;
 
     const user = await this.userService.findOne({ email, password_hash });
-  
-    if (!user)
+
+    if (!user || user.refresh_token !== refresh_token)
       throw new UnauthorizedException({
         message: 'Refresh token is not valid!',
       });
@@ -166,10 +194,12 @@ export class AuthService {
       password_hash,
     });
 
-      await this.userService.create({
-        ...user,
-        ...newTokens,
-      });
+    await this.userService.create({
+      ...user,
+      ...newTokens,
+    });
+
+    this.setCookies(newTokens.refresh_token, response);
 
     return {
       success: true,

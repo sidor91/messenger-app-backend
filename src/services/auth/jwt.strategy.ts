@@ -13,6 +13,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    return this.authService.validateUser(payload);
+    const { id, password_hash } = payload;
+
+    if (!id || !password_hash) return false;
+
+    return this.authService.validateUser({ id, password_hash });
   }
 }

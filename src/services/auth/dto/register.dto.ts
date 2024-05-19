@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType, PickType } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
@@ -6,6 +6,7 @@ import {
   IsPhoneNumber,
   IsString,
 } from 'class-validator';
+import { RefreshTokenResponseDto } from './refresh-token.dto';
 
 export class UserRegisterDto {
   @ApiProperty({
@@ -57,13 +58,9 @@ export class UserRegisterDto {
   readonly last_name: string;
 }
 
-export class UserAuthResponseDto {
-  @ApiProperty({
-    example: true,
-    description: 'success status',
-  })
-  readonly success: boolean;
-
+export class UserRegisterResponseDto extends OmitType(UserRegisterDto, [
+  'password',
+] as const) {
   @ApiProperty({
     example: {
       accessToken:
@@ -73,5 +70,5 @@ export class UserAuthResponseDto {
     },
     description: 'Object containing both JWT access and refresh tokens',
   })
-  readonly data: { accessToken: string; refreshToken: string };
+  readonly tokens: { accessToken: string; refreshToken: string };
 }
