@@ -7,14 +7,12 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { Response } from 'express';
 
 import { UserService } from '../user/user.service';
 
-import { UserRegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { Response } from 'express';
-
-type ValidateUser = { [login: string]: string; password_hash: string };
+import { UserRegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
@@ -72,9 +70,13 @@ export class AuthService {
   }
 
   async register(dto: UserRegisterDto, response: Response) {
-    const { username, email, password, ...restDto } = dto;
+    const { username, email, phone, password, ...restDto } = dto;
 
-    const isExists = await this.userService.findOne([{ email }, { username }]);
+    const isExists = await this.userService.findOne([
+      { email },
+      { username },
+      { phone },
+    ]);
 
     if (isExists)
       throw new HttpException(
@@ -97,21 +99,18 @@ export class AuthService {
       password_hash,
     });
 
-    const {
-      password_hash: saved_password,
-      access_token,
-      refresh_token,
-      ...userData
-    } = await this.userService.create({
+    const user = await this.userService.create({
       ...newUser,
       ...tokens,
     });
 
-    this.setCookies(refresh_token, response);
+    delete user.password_hash;
+
+    this.setCookies(tokens.refresh_token, response);
 
     return {
       success: true,
-      data: { ...userData, tokens },
+      data: { ...user },
     };
   }
 
@@ -147,21 +146,18 @@ export class AuthService {
       password_hash,
     });
 
-    const {
-      password_hash: saved_password,
-      access_token,
-      refresh_token,
-      ...userData
-    } = await this.userService.create({
+    const updatedUser = await this.userService.create({
       ...user,
       ...newTokens,
     });
 
-    this.setCookies(refresh_token, response);
+    delete updatedUser.password_hash;
+
+    this.setCookies(newTokens.refresh_token, response);
 
     return {
       success: true,
-      data: { ...userData, tokens: newTokens },
+      data: { ...updatedUser },
     };
   }
 

@@ -3,14 +3,12 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { JwtService } from '@nestjs/jwt';
+import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
 export class JwtRefreshAuthGuard extends AuthGuard('jwt') {
-  constructor(
-    private readonly jwtService: JwtService,
-  ) {
+  constructor(private readonly jwtService: JwtService) {
     super();
   }
   canActivate(context: ExecutionContext) {
@@ -26,7 +24,7 @@ export class JwtRefreshAuthGuard extends AuthGuard('jwt') {
       const payload = this.jwtService.verify(token, {
         secret: process.env.JWT_SECRET,
       });
-      request.user = {...payload, refresh_token: token};
+      request.user = { ...payload, refresh_token: token };
     } catch (error) {
       throw new UnauthorizedException('Token is invalid');
     }
@@ -34,7 +32,7 @@ export class JwtRefreshAuthGuard extends AuthGuard('jwt') {
     return true;
   }
 
-  handleRequest(err, user, info) {
+  handleRequest(err, user) {
     if (err || !user) {
       throw err || new UnauthorizedException();
     }

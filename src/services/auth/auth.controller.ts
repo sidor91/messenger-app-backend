@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Post,
-  Query,
   Req,
   Res,
   UseGuards,
@@ -14,16 +13,18 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Response } from 'express';
+
+import { GetCurrentUserId } from 'src/@decorators/getCurrentUserId.decorator';
+import { Public } from 'src/@decorators/public.decorator';
+import { JwtRefreshAuthGuard } from 'src/@guards/jwt-refresh-auth.guard';
+
+import { User } from '../user/entity/user.entity';
 
 import { AuthService } from './auth.service';
-import { UserRegisterDto, UserRegisterResponseDto } from './dto/register.dto';
-import { RefreshTokenResponseDto } from './dto/refresh-token.dto';
 import { LoginDto } from './dto/login.dto';
-import { User } from '../user/entity/user.entity';
-import { Public } from 'src/@decorators/public.decorator';
-import { GetCurrentUserId } from 'src/@decorators/getCurrentUserId.decorator';
-import { JwtRefreshAuthGuard } from 'src/@guards/jwt-refresh-auth.guard';
-import { Response } from 'express';
+import { RefreshTokenResponseDto } from './dto/refresh-token.dto';
+import { UserRegisterDto, UserRegisterResponseDto } from './dto/register.dto';
 
 @ApiTags('Auth API')
 @Controller('auth')
