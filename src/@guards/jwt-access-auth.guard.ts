@@ -1,5 +1,7 @@
 import {
   ExecutionContext,
+  HttpException,
+  HttpStatus,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -23,7 +25,7 @@ export class JwtAccessAuthGuard extends AuthGuard('jwt') {
     const authHeader = request.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Invalid token');
+      throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);;
     }
 
     request.access_token = authHeader.replace('Bearer ', '');

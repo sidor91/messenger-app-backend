@@ -43,7 +43,7 @@ export class AuthService {
 
     const password_hash = await this.cryptoService.hashPassword(password);
 
-    const newUser = await this.userService.create({
+    const {id: userId} = await this.userService.create({
       username,
       email,
       password_hash,
@@ -52,23 +52,18 @@ export class AuthService {
     });
 
     const tokens = await this.jwtTokenService.generateTokens({
-      id: newUser.id,
+      id: userId,
       email,
       password_hash,
     });
 
-    const user = await this.userService.create({
-      ...newUser,
-      ...tokens,
-    });
-
-    delete user.password_hash;
+    const updatedUser = await this.userService.update(userId, tokens);
 
     setCookies(tokens.refresh_token, response);
 
     return {
       success: true,
-      data: { ...user },
+      data: updatedUser,
     };
   }
 
@@ -104,18 +99,13 @@ export class AuthService {
       password_hash,
     });
 
-    const updatedUser = await this.userService.create({
-      ...user,
-      ...newTokens,
-    });
-
-    delete updatedUser.password_hash;
+    const updatedUser = await this.userService.update(id, newTokens);
 
     setCookies(newTokens.refresh_token, response);
 
     return {
       success: true,
-      data: { ...updatedUser },
+      data: updatedUser,
     };
   }
 
@@ -124,14 +114,7 @@ export class AuthService {
     password_hash: string;
     access_token: string;
   }) {
-    const { id, password_hash, access_token } = payload;
-    const user = await this.userService.findOne({ id, password_hash });
-
-    if (!user || user.access_token !== access_token) {
-      return false;
-    }
-
-    return user;
+    return await this.userService.findOne(payload);
   }
 
   async refreshTokens(
@@ -153,10 +136,7 @@ export class AuthService {
       password_hash,
     });
 
-    await this.userService.create({
-      ...user,
-      ...newTokens,
-    });
+    await this.userService.update(user.id, newTokens);
 
     setCookies(newTokens.refresh_token, response);
 
@@ -167,17 +147,21 @@ export class AuthService {
   }
 
   async logout(userId: string, response: Response) {
-    const user = await this.userService.findOne({ id: userId });
-    const updatedUser = { ...user, access_token: '', refresh_token: '' };
-    await this.userService.create({ ...updatedUser });
+    await this.userService.update(userId, {
+      access_token: '',
+      refresh_token: '',
+    });
     setCookies('', response);
     return { success: true };
   }
 
-  current(userId: string) {
+  async current(userId: string) {
+    const user = await this.userService.findOne({ id: userId });
+    delete user.password_hash;
+
     return {
       success: true,
-      user_id: userId,
+      data: user,
     };
   }
 }

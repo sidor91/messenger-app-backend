@@ -22,7 +22,6 @@ import { SuccessDto } from 'src/common/dto/success.dto';
 
 import { AuthService } from './auth.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
-import { CurrentUserResponseDto } from './dto/current-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenResponseDto } from './dto/refresh-token.dto';
 import { UserRegisterDto } from './dto/register.dto';
@@ -86,7 +85,7 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Current user' })
   @ApiResponse({
-    type: CurrentUserResponseDto,
+    type: AuthResponseDto,
   })
   current(@GetCurrentUserId() userId: string) {
     return this.authService.current(userId);
