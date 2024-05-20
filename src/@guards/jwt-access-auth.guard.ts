@@ -26,7 +26,7 @@ export class JwtAccessAuthGuard extends AuthGuard('jwt') {
       throw new UnauthorizedException('Invalid token');
     }
 
-    request.access_token = authHeader.replace('Bearer ', ''); 
+    request.access_token = authHeader.replace('Bearer ', '');
 
     return super.canActivate(context);
   }

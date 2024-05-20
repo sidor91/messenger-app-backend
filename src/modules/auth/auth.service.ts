@@ -118,7 +118,11 @@ export class AuthService {
     };
   }
 
-  async validateUser(payload: { id: string; password_hash: string, access_token: string }) {
+  async validateUser(payload: {
+    id: string;
+    password_hash: string;
+    access_token: string;
+  }) {
     const { id, password_hash, access_token } = payload;
     const user = await this.userService.findOne({ id, password_hash });
 
