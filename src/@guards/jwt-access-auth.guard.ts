@@ -19,6 +19,15 @@ export class JwtAccessAuthGuard extends AuthGuard('jwt') {
 
     if (isPublic) return true;
 
+    const request = context.switchToHttp().getRequest();
+    const authHeader = request.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    request.access_token = authHeader.replace('Bearer ', ''); 
+
     return super.canActivate(context);
   }
 
