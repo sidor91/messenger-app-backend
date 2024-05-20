@@ -3,8 +3,8 @@ import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class JwtTokenService {
-  constructor(private readonly jwtService: JwtService) { }
-  
+  constructor(private readonly jwtService: JwtService) {}
+
   verify(token: string) {
     const secret = process.env.JWT_SECRET;
     return this.jwtService.verify(token, {

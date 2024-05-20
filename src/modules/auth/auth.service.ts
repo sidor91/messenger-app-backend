@@ -6,12 +6,13 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 
+import { JwtTokenService } from 'src/modules/jwt-token/jwt-token.service';
+import cryptoService, { CryptoServiceI } from 'src/services/crypto.service';
+
 import { UserService } from '../user/user.service';
 
 import { LoginDto } from './dto/login.dto';
 import { UserRegisterDto } from './dto/register.dto';
-import { JwtTokenService } from 'src/modules/jwt-token/jwt-token.service';
-import cryptoService, { CryptoServiceI } from 'src/services/crypto.service';
 
 @Injectable()
 export class AuthService {

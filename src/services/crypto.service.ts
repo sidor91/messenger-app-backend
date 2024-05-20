@@ -19,4 +19,4 @@ class CryptoService implements CryptoServiceI {
   }
 }
 
-export default new CryptoService()
+export default new CryptoService();
