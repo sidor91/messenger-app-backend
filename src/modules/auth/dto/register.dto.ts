@@ -1,4 +1,4 @@
-import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
@@ -7,7 +7,6 @@ import {
   IsString,
 } from 'class-validator';
 
-import { User } from 'src/modules/user/entity/user.entity';
 
 export class UserRegisterDto {
   @ApiProperty({
@@ -58,7 +57,3 @@ export class UserRegisterDto {
   @IsString()
   readonly last_name: string;
 }
-
-export class UserRegisterResponseDto extends OmitType(User, [
-  'password_hash',
-] as const) {}

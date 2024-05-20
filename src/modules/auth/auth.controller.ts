@@ -19,12 +19,13 @@ import { GetCurrentUserId } from 'src/@decorators/getCurrentUserId.decorator';
 import { Public } from 'src/@decorators/public.decorator';
 import { JwtRefreshAuthGuard } from 'src/@guards/jwt-refresh-auth.guard';
 
-import { User } from '../user/entity/user.entity';
-
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenResponseDto } from './dto/refresh-token.dto';
-import { UserRegisterDto, UserRegisterResponseDto } from './dto/register.dto';
+import { UserRegisterDto } from './dto/register.dto';
+import { AuthResponseDto } from './dto/auth-response.dto';
+import { SuccessDto } from 'src/common/dto/success.dto';
+import { CurrentUserResponseDto } from './dto/current-user.dto';
 
 @ApiTags('Auth API')
 @Controller('auth')
@@ -35,7 +36,7 @@ export class AuthController {
   @Public()
   @ApiOperation({ summary: 'Register user' })
   @ApiResponse({
-    type: UserRegisterResponseDto,
+    type: AuthResponseDto,
   })
   async register(
     @Body() userDto: UserRegisterDto,
@@ -48,7 +49,7 @@ export class AuthController {
   @Public()
   @ApiOperation({ summary: 'Login user' })
   @ApiResponse({
-    type: UserRegisterResponseDto,
+    type: AuthResponseDto,
   })
   async login(
     @Body() loginDto: LoginDto,
@@ -68,13 +69,26 @@ export class AuthController {
     return this.authService.refreshTokens(request.user, response);
   }
 
+  @Get('/logout')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Logout' })
+  @ApiResponse({
+    type: SuccessDto,
+  })
+  logout(
+    @GetCurrentUserId() userId: string,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    return this.authService.logout(userId, response);
+  }
+
   @Get('/current')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Current user' })
   @ApiResponse({
-    type: User,
+    type: CurrentUserResponseDto,
   })
   current(@GetCurrentUserId() userId: string) {
-    return userId;
+    return this.authService.current(userId);
   }
 }

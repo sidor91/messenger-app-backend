@@ -47,6 +47,7 @@ export class AuthService {
       username,
       email,
       password_hash,
+      phone,
       ...restDto,
     });
 
@@ -165,7 +166,18 @@ export class AuthService {
     };
   }
 
-  current() {
+  async logout(userId: string, response: Response) {
+    const user = await this.userService.findOne({ id: userId });
+    const updatedUser = { ...user, access_token: '', refresh_token: '' };
+    await this.userService.create({ ...updatedUser });
+    setCookies('', response);
     return { success: true };
+  }
+
+  current(userId: string) {
+    return {
+      success: true,
+      user_id: userId,
+    };
   }
 }

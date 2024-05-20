@@ -15,7 +15,7 @@ class CryptoService implements CryptoServiceI {
   }
 
   async validatePassword(password: string, hash: string) {
-    return await bcrypt.compare(password, hash);
+    return bcrypt.compare(password, hash);
   }
 }
 

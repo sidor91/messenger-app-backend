@@ -4,7 +4,7 @@ import {
   // JoinColumn, OneToMany
 } from 'typeorm';
 
-import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger';
 
 import { CommonColumns } from 'src/common/entities/common.entity';
 // import { Order } from 'src/order/entities/order.entity';
@@ -92,3 +92,5 @@ export class User extends CommonColumns {
 }
 
 export class UpdateUserDto extends PartialType(User) {}
+
+export class UserWithoutPassword extends OmitType(User, ['password_hash'] as const) {}
