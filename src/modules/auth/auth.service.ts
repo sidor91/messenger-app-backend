@@ -4,60 +4,24 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
 
 import { UserService } from '../user/user.service';
 
 import { LoginDto } from './dto/login.dto';
 import { UserRegisterDto } from './dto/register.dto';
+import { JwtTokenService } from 'src/modules/jwt-token/jwt-token.service';
+import cryptoService, { CryptoServiceI } from 'src/services/crypto.service';
 
 @Injectable()
 export class AuthService {
+  cryptoService: CryptoServiceI;
+
   constructor(
     private readonly userService: UserService,
-    private configService: ConfigService,
-    private jwtService: JwtService,
-  ) {}
-
-  async hashPassword(password: string) {
-    const saltRounds = this.configService.get<string>('SALT_ROUNDS');
-    return await bcrypt.hash(password, Number(saltRounds));
-  }
-
-  async validatePassword(password: string, password_hash: string) {
-    return await bcrypt.compare(password, password_hash);
-  }
-
-  async generateAccessToken(payload: {
-    id: string;
-    password_hash: string;
-  }): Promise<string> {
-    return this.jwtService.sign(payload, { expiresIn: 300 });
-  }
-
-  async generateRefreshToken(payload: {
-    email: string;
-    password_hash: string;
-  }): Promise<string> {
-    return this.jwtService.sign(payload, { expiresIn: '1d' });
-  }
-
-  async generateTokens(dto: {
-    id: string;
-    email: string;
-    password_hash: string;
-  }) {
-    const { id, email, password_hash } = dto;
-    const access_token = await this.generateAccessToken({ id, password_hash });
-    const refresh_token = await this.generateRefreshToken({
-      email,
-      password_hash,
-    });
-
-    return { access_token, refresh_token };
+    private readonly jwtTokenService: JwtTokenService,
+  ) {
+    this.cryptoService = cryptoService;
   }
 
   setCookies(token: string, response: Response) {
@@ -84,7 +48,7 @@ export class AuthService {
         HttpStatus.BAD_REQUEST,
       );
 
-    const password_hash = await this.hashPassword(password);
+    const password_hash = await this.cryptoService.hashPassword(password);
 
     const newUser = await this.userService.create({
       username,
@@ -93,7 +57,7 @@ export class AuthService {
       ...restDto,
     });
 
-    const tokens = await this.generateTokens({
+    const tokens = await this.jwtTokenService.generateTokens({
       id: newUser.id,
       email,
       password_hash,
@@ -129,7 +93,7 @@ export class AuthService {
         HttpStatus.BAD_REQUEST,
       );
 
-    const isPasswordValid = await this.validatePassword(
+    const isPasswordValid = await this.cryptoService.validatePassword(
       password,
       user.password_hash,
     );
@@ -140,7 +104,7 @@ export class AuthService {
 
     const { id, email, password_hash } = user;
 
-    const newTokens = await this.generateTokens({
+    const newTokens = await this.jwtTokenService.generateTokens({
       id,
       email,
       password_hash,
@@ -184,7 +148,7 @@ export class AuthService {
         message: 'Refresh token is not valid!',
       });
 
-    const newTokens = await this.generateTokens({
+    const newTokens = await this.jwtTokenService.generateTokens({
       id: user.id,
       email,
       password_hash,
