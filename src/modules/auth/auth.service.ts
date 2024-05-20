@@ -43,7 +43,7 @@ export class AuthService {
 
     const password_hash = await this.cryptoService.hashPassword(password);
 
-    const {id: userId} = await this.userService.create({
+    const { id: userId } = await this.userService.create({
       username,
       email,
       password_hash,

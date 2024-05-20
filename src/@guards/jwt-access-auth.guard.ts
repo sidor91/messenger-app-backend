@@ -25,7 +25,7 @@ export class JwtAccessAuthGuard extends AuthGuard('jwt') {
     const authHeader = request.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);;
+      throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
     }
 
     request.access_token = authHeader.replace('Bearer ', '');
