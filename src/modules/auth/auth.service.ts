@@ -13,6 +13,7 @@ import { UserService } from '../user/user.service';
 
 import { LoginDto } from './dto/login.dto';
 import { UserRegisterDto } from './dto/register.dto';
+import { setCookies } from 'src/services/cookies.service';
 
 @Injectable()
 export class AuthService {
@@ -23,15 +24,6 @@ export class AuthService {
     private readonly jwtTokenService: JwtTokenService,
   ) {
     this.cryptoService = cryptoService;
-  }
-
-  setCookies(token: string, response: Response) {
-    response.cookie('refreshToken', token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000,
-    });
   }
 
   async register(dto: UserRegisterDto, response: Response) {
@@ -71,7 +63,7 @@ export class AuthService {
 
     delete user.password_hash;
 
-    this.setCookies(tokens.refresh_token, response);
+    setCookies(tokens.refresh_token, response);
 
     return {
       success: true,
@@ -118,7 +110,7 @@ export class AuthService {
 
     delete updatedUser.password_hash;
 
-    this.setCookies(newTokens.refresh_token, response);
+    setCookies(newTokens.refresh_token, response);
 
     return {
       success: true,
@@ -160,7 +152,7 @@ export class AuthService {
       ...newTokens,
     });
 
-    this.setCookies(newTokens.refresh_token, response);
+    setCookies(newTokens.refresh_token, response);
 
     return {
       success: true,
