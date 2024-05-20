@@ -7,13 +7,13 @@ import {
 import { Response } from 'express';
 
 import { JwtTokenService } from 'src/modules/jwt-token/jwt-token.service';
+import { setCookies } from 'src/services/cookies.service';
 import cryptoService, { CryptoServiceI } from 'src/services/crypto.service';
 
 import { UserService } from '../user/user.service';
 
 import { LoginDto } from './dto/login.dto';
 import { UserRegisterDto } from './dto/register.dto';
-import { setCookies } from 'src/services/cookies.service';
 
 @Injectable()
 export class AuthService {
