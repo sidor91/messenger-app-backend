@@ -22,9 +22,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(request: RequestWithToken, payload: any) {
     const { id, password_hash } = payload;
     const { access_token } = request;
-
-    if (!id || !password_hash || !access_token) return false;
-
     return this.authService.validateUser({ id, password_hash, access_token });
   }
 }

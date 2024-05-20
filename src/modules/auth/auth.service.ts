@@ -26,6 +26,16 @@ export class AuthService {
     this.cryptoService = cryptoService;
   }
 
+  async validateUser(payload: {
+    id: string;
+    password_hash: string;
+    access_token: string;
+  }) {
+    const { id, password_hash, access_token } = payload;
+    if (!id || !password_hash || !access_token) return false;
+    return await this.userService.findOne(payload);
+  }
+
   async register(dto: UserRegisterDto, response: Response) {
     const { username, email, phone, password, ...restDto } = dto;
 
@@ -107,14 +117,6 @@ export class AuthService {
       success: true,
       data: updatedUser,
     };
-  }
-
-  async validateUser(payload: {
-    id: string;
-    password_hash: string;
-    access_token: string;
-  }) {
-    return await this.userService.findOne(payload);
   }
 
   async refreshTokens(
