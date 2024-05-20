@@ -1,5 +1,6 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { SuccessDto } from "src/common/dto/success.dto";
+import { ApiProperty } from '@nestjs/swagger';
+
+import { SuccessDto } from 'src/common/dto/success.dto';
 
 export class CurrentUserResponseDto extends SuccessDto {
   @ApiProperty({

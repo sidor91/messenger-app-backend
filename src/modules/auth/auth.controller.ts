@@ -18,14 +18,14 @@ import { Response } from 'express';
 import { GetCurrentUserId } from 'src/@decorators/getCurrentUserId.decorator';
 import { Public } from 'src/@decorators/public.decorator';
 import { JwtRefreshAuthGuard } from 'src/@guards/jwt-refresh-auth.guard';
+import { SuccessDto } from 'src/common/dto/success.dto';
 
 import { AuthService } from './auth.service';
+import { AuthResponseDto } from './dto/auth-response.dto';
+import { CurrentUserResponseDto } from './dto/current-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenResponseDto } from './dto/refresh-token.dto';
 import { UserRegisterDto } from './dto/register.dto';
-import { AuthResponseDto } from './dto/auth-response.dto';
-import { SuccessDto } from 'src/common/dto/success.dto';
-import { CurrentUserResponseDto } from './dto/current-user.dto';
 
 @ApiTags('Auth API')
 @Controller('auth')

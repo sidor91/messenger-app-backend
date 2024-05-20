@@ -1,6 +1,7 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { SuccessDto } from "src/common/dto/success.dto";
-import { UserWithoutPassword } from "src/modules/user/entity/user.entity";
+import { ApiProperty } from '@nestjs/swagger';
+
+import { SuccessDto } from 'src/common/dto/success.dto';
+import { UserWithoutPassword } from 'src/modules/user/entity/user.entity';
 
 export class AuthResponseDto extends SuccessDto {
   @ApiProperty({

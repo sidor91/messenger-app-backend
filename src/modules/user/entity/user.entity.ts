@@ -93,4 +93,6 @@ export class User extends CommonColumns {
 
 export class UpdateUserDto extends PartialType(User) {}
 
-export class UserWithoutPassword extends OmitType(User, ['password_hash'] as const) {}
+export class UserWithoutPassword extends OmitType(User, [
+  'password_hash',
+] as const) {}

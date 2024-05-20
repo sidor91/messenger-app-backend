@@ -7,7 +7,6 @@ import {
   IsString,
 } from 'class-validator';
 
-
 export class UserRegisterDto {
   @ApiProperty({
     example: 'username',
