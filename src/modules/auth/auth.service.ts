@@ -14,7 +14,6 @@ import {
   userFieldsToRemove,
 } from 'src/services/object-field-removal.service';
 
-import { User } from '../user/entity/user.entity';
 import { UserService } from '../user/user.service';
 
 import { LoginDto } from './dto/login.dto';

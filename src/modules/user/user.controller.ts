@@ -8,8 +8,10 @@ import {
 
 import { GetCurrentUserId } from 'src/@decorators/getCurrentUserId.decorator';
 
-import { UpdateUserDto, UpdateUserRequestDto } from './dto/update-user.dto';
-import { UpdateUserResponseDto } from './dto/update-user.dto';
+import {
+  UpdateUserRequestDto,
+  UpdateUserResponseDto,
+} from './dto/update-user.dto';
 import { UserService } from './user.service';
 
 @ApiTags('User API')
