@@ -7,13 +7,13 @@ import {
 } from '@nestjs/swagger';
 
 import { GetCurrentUserId } from 'src/@decorators/getCurrentUserId.decorator';
+import { SuccessDto } from 'src/common/dto/success.dto';
 
 import {
   UpdateUserRequestDto,
   UpdateUserResponseDto,
 } from './dto/update-user.dto';
 import { UserService } from './user.service';
-import { SuccessDto } from 'src/common/dto/success.dto';
 
 @ApiTags('User API')
 @Controller('user')
