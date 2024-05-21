@@ -13,21 +13,12 @@ import {
   UpdateUserResponseDto,
 } from './dto/update-user.dto';
 import { UserService } from './user.service';
+import { SuccessDto } from 'src/common/dto/success.dto';
 
 @ApiTags('User API')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-
-  @Get('/current')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Current user' })
-  @ApiResponse({
-    type: UpdateUserResponseDto,
-  })
-  current(@GetCurrentUserId() userId: string) {
-    return this.userService.current(userId);
-  }
 
   @Post('/update')
   @ApiBearerAuth()
@@ -35,10 +26,30 @@ export class UserController {
   @ApiResponse({
     type: UpdateUserResponseDto,
   })
-  async register(
+  async updateUser(
     @Body() userDto: UpdateUserRequestDto,
     @GetCurrentUserId() userId: string,
   ) {
     return this.userService.update(userId, userDto);
+  }
+
+  @Get('/current')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Current user' })
+  @ApiResponse({
+    type: UpdateUserResponseDto,
+  })
+  getCurrent(@GetCurrentUserId() userId: string) {
+    return this.userService.current(userId);
+  }
+
+  @Get('/delete')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete current user' })
+  @ApiResponse({
+    type: SuccessDto,
+  })
+  deleteUser(@GetCurrentUserId() userId: string) {
+    return this.userService.delete(userId);
   }
 }
