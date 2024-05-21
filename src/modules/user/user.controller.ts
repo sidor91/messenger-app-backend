@@ -6,10 +6,11 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
-import { UserService } from './user.service';
-import { UpdateUserDto, UpdateUserRequestDto } from './dto/update-user.dto';
 import { GetCurrentUserId } from 'src/@decorators/getCurrentUserId.decorator';
+
+import { UpdateUserDto, UpdateUserRequestDto } from './dto/update-user.dto';
 import { UpdateUserResponseDto } from './dto/update-user.dto';
+import { UserService } from './user.service';
 
 @ApiTags('User API')
 @Controller('user')

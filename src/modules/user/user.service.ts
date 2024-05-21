@@ -3,9 +3,13 @@ import { Repository } from 'typeorm';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { User } from './entity/user.entity';
+import {
+  objectFieldRemoval,
+  userFieldsToRemove,
+} from 'src/services/object-field-removal.service';
+
 import { UpdateUserDto } from './dto/update-user.dto';
-import { userFieldsToRemove, objectFieldRemoval } from 'src/services/object-field-removal.service';
+import { User } from './entity/user.entity';
 
 @Injectable()
 export class UserService {
@@ -40,12 +44,13 @@ export class UserService {
     return { success: true, data };
   }
 
-
-
   async current(userId: string) {
     const user = await this.findOne({ id: userId });
 
-    const data = objectFieldRemoval(user, userFieldsToRemove.PASSWORD_AND_TOKENS);
+    const data = objectFieldRemoval(
+      user,
+      userFieldsToRemove.PASSWORD_AND_TOKENS,
+    );
 
     return {
       success: true,

@@ -9,13 +9,16 @@ import { Response } from 'express';
 import { JwtTokenService } from 'src/modules/jwt-token/jwt-token.service';
 import { setCookies } from 'src/services/cookies.service';
 import cryptoService, { CryptoServiceI } from 'src/services/crypto.service';
+import {
+  objectFieldRemoval,
+  userFieldsToRemove,
+} from 'src/services/object-field-removal.service';
 
+import { User } from '../user/entity/user.entity';
 import { UserService } from '../user/user.service';
 
 import { LoginDto } from './dto/login.dto';
 import { UserRegisterDto } from './dto/register.dto';
-import { User } from '../user/entity/user.entity';
-import { userFieldsToRemove, objectFieldRemoval } from 'src/services/object-field-removal.service';
 
 @Injectable()
 export class AuthService {
@@ -69,7 +72,10 @@ export class AuthService {
       password_hash,
     });
 
-    const updatedUser = await this.userService.create({...newUser, ...tokens});
+    const updatedUser = await this.userService.create({
+      ...newUser,
+      ...tokens,
+    });
 
     const data = objectFieldRemoval(updatedUser, userFieldsToRemove.PASSWORD);
 
@@ -113,7 +119,10 @@ export class AuthService {
       password_hash,
     });
 
-    const updatedUser = await this.userService.create({...user, ...newTokens});
+    const updatedUser = await this.userService.create({
+      ...user,
+      ...newTokens,
+    });
 
     const data = objectFieldRemoval(updatedUser, userFieldsToRemove.PASSWORD);
 
