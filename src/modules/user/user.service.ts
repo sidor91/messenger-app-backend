@@ -10,6 +10,8 @@ import {
 
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entity/user.entity';
+import { Response } from 'express';
+import { setCookies } from 'src/services/cookies.service';
 
 @Injectable()
 export class UserService {
@@ -44,9 +46,9 @@ export class UserService {
     return { success: true, data };
   }
 
-  async delete(id: string) {
+  async delete(id: string, response: Response) {
     await this.userRepository.delete(id);
-
+    setCookies('', response);
     return { success: true };
   }
 

@@ -1,5 +1,7 @@
 import {
   ExecutionContext,
+  HttpException,
+  HttpStatus,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -18,7 +20,7 @@ export class JwtRefreshAuthGuard extends AuthGuard('jwt') {
     const token = request.cookies['refreshToken'];
 
     if (!token) {
-      throw new UnauthorizedException('Token not found');
+      throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
     }
 
     try {

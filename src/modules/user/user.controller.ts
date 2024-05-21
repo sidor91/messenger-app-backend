@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Res } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -14,6 +14,7 @@ import {
   UpdateUserResponseDto,
 } from './dto/update-user.dto';
 import { UserService } from './user.service';
+import { Response } from 'express';
 
 @ApiTags('User API')
 @Controller('user')
@@ -49,7 +50,10 @@ export class UserController {
   @ApiResponse({
     type: SuccessDto,
   })
-  deleteUser(@GetCurrentUserId() userId: string) {
-    return this.userService.delete(userId);
+  deleteUser(
+    @GetCurrentUserId() userId: string,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    return this.userService.delete(userId, response);
   }
 }
