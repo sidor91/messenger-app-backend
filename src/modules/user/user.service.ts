@@ -2,7 +2,9 @@ import { Repository } from 'typeorm';
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Response } from 'express';
 
+import { setCookies } from 'src/services/cookies.service';
 import {
   objectFieldRemoval,
   userFieldsToRemove,
@@ -10,8 +12,6 @@ import {
 
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entity/user.entity';
-import { Response } from 'express';
-import { setCookies } from 'src/services/cookies.service';
 
 @Injectable()
 export class UserService {

@@ -5,6 +5,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Response } from 'express';
 
 import { GetCurrentUserId } from 'src/@decorators/getCurrentUserId.decorator';
 import { SuccessDto } from 'src/common/dto/success.dto';
@@ -14,7 +15,6 @@ import {
   UpdateUserResponseDto,
 } from './dto/update-user.dto';
 import { UserService } from './user.service';
-import { Response } from 'express';
 
 @ApiTags('User API')
 @Controller('user')
