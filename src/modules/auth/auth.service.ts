@@ -14,6 +14,8 @@ import { UserService } from '../user/user.service';
 
 import { LoginDto } from './dto/login.dto';
 import { UserRegisterDto } from './dto/register.dto';
+import { User } from '../user/entity/user.entity';
+import { userFieldsToRemove, objectFieldRemoval } from 'src/services/object-field-removal.service';
 
 @Injectable()
 export class AuthService {
@@ -53,7 +55,7 @@ export class AuthService {
 
     const password_hash = await this.cryptoService.hashPassword(password);
 
-    const { id: userId } = await this.userService.create({
+    const newUser = await this.userService.create({
       username,
       email,
       password_hash,
@@ -62,18 +64,20 @@ export class AuthService {
     });
 
     const tokens = await this.jwtTokenService.generateTokens({
-      id: userId,
+      id: newUser.id,
       email,
       password_hash,
     });
 
-    const updatedUser = await this.userService.update(userId, tokens);
+    const updatedUser = await this.userService.create({...newUser, ...tokens});
+
+    const data = objectFieldRemoval(updatedUser, userFieldsToRemove.PASSWORD);
 
     setCookies(tokens.refresh_token, response);
 
     return {
       success: true,
-      data: updatedUser,
+      data,
     };
   }
 
@@ -109,13 +113,15 @@ export class AuthService {
       password_hash,
     });
 
-    const updatedUser = await this.userService.update(id, newTokens);
+    const updatedUser = await this.userService.create({...user, ...newTokens});
+
+    const data = objectFieldRemoval(updatedUser, userFieldsToRemove.PASSWORD);
 
     setCookies(newTokens.refresh_token, response);
 
     return {
       success: true,
-      data: updatedUser,
+      data,
     };
   }
 
@@ -155,15 +161,5 @@ export class AuthService {
     });
     setCookies('', response);
     return { success: true };
-  }
-
-  async current(userId: string) {
-    const user = await this.userService.findOne({ id: userId });
-    delete user.password_hash;
-
-    return {
-      success: true,
-      data: user,
-    };
   }
 }

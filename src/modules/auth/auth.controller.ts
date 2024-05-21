@@ -80,14 +80,4 @@ export class AuthController {
   ) {
     return this.authService.logout(userId, response);
   }
-
-  @Get('/current')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Current user' })
-  @ApiResponse({
-    type: AuthResponseDto,
-  })
-  current(@GetCurrentUserId() userId: string) {
-    return this.authService.current(userId);
-  }
 }

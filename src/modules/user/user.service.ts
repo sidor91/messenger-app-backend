@@ -3,7 +3,9 @@ import { Repository } from 'typeorm';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { UpdateUserDto, User } from './entity/user.entity';
+import { User } from './entity/user.entity';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { userFieldsToRemove, objectFieldRemoval } from 'src/services/object-field-removal.service';
 
 @Injectable()
 export class UserService {
@@ -18,7 +20,6 @@ export class UserService {
 
   async create(dto: User) {
     const user = await this.userRepository.save(dto);
-    delete user.password_hash;
     return user;
   }
 
@@ -31,6 +32,24 @@ export class UserService {
     Object.assign(user, dto);
     const updatedUser = await this.create(user);
 
-    return updatedUser;
+    const data = objectFieldRemoval(
+      updatedUser,
+      userFieldsToRemove.PASSWORD_AND_TOKENS,
+    );
+
+    return { success: true, data };
+  }
+
+
+
+  async current(userId: string) {
+    const user = await this.findOne({ id: userId });
+
+    const data = objectFieldRemoval(user, userFieldsToRemove.PASSWORD_AND_TOKENS);
+
+    return {
+      success: true,
+      data,
+    };
   }
 }

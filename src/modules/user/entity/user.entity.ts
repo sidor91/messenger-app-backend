@@ -91,8 +91,14 @@ export class User extends CommonColumns {
   // transactions: Transaction;
 }
 
-export class UpdateUserDto extends PartialType(User) {}
+export class PartialUserDto extends PartialType(User) {}
 
 export class UserWithoutPassword extends OmitType(User, [
+  'password_hash',
+] as const) {}
+
+export class UserWithoutConfidentialDataDto extends OmitType(User, [
+  'access_token',
+  'refresh_token',
   'password_hash',
 ] as const) {}

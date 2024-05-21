@@ -8,7 +8,7 @@ import { ChatModule } from './modules/chat/chat.module';
 import { UserModule } from './modules/user/user.module';
 
 @Module({
-  imports: [UserModule, AppConfigModule, AuthModule, ChatModule],
+  imports: [AuthModule, UserModule, AppConfigModule, ChatModule],
   controllers: [AppController],
   providers: [AppService],
 })
