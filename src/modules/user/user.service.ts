@@ -1,6 +1,11 @@
 import { Repository } from 'typeorm';
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import {
@@ -18,7 +23,7 @@ export class UserService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async findOne(request = {}): Promise<User | undefined> {
+  async findOne(request = {}) {
     return await this.userRepository.findOne({ where: request });
   }
 
@@ -42,6 +47,12 @@ export class UserService {
     );
 
     return { success: true, data };
+  }
+
+  async delete(id: string) {
+    await this.userRepository.delete(id);
+
+    return { success: true };
   }
 
   async current(userId: string) {
