@@ -6,7 +6,7 @@ import { Public } from './@decorators/public.decorator';
 export class AppController {
   @Public()
   @Get()
-  geto() {
+  getAppStatus() {
     return { success: true };
   }
 }
