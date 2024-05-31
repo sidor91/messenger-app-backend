@@ -8,7 +8,7 @@ import { Response } from 'express';
 
 import { JwtTokenService } from 'src/modules/jwt-token/jwt-token.service';
 import { setCookies } from 'src/services/cookies.service';
-import cryptoService, { CryptoServiceI } from 'src/services/crypto.service';
+import { CryptoService } from 'src/services/crypto.service';
 import {
   objectFieldRemoval,
   userFieldsToRemove,
@@ -21,14 +21,11 @@ import { UserRegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
-  cryptoService: CryptoServiceI;
-
   constructor(
     private readonly userService: UserService,
     private readonly jwtTokenService: JwtTokenService,
-  ) {
-    this.cryptoService = cryptoService;
-  }
+    private readonly cryptoService: CryptoService,
+  ) {}
 
   async validateUser(payload: {
     id: string;

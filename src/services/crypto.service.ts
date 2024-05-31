@@ -1,11 +1,8 @@
+import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
-export interface CryptoServiceI {
-  hashPassword(password: string): Promise<string>;
-  validatePassword(password: string, hash: string): Promise<boolean>;
-}
-
-class CryptoService implements CryptoServiceI {
+@Injectable()
+export class CryptoService {
   private readonly saltRounds: number;
   constructor() {
     this.saltRounds = Number(process.env.SALT_ROUNDS);
@@ -18,5 +15,3 @@ class CryptoService implements CryptoServiceI {
     return bcrypt.compare(password, hash);
   }
 }
-
-export default new CryptoService();
