@@ -1,8 +1,4 @@
-import {
-  Column,
-  Entity,
-  JoinColumn, ManyToMany, OneToMany
-} from 'typeorm';
+import { Column, Entity, ManyToMany } from 'typeorm';
 
 import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger';
 

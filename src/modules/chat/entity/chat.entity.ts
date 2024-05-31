@@ -1,14 +1,18 @@
 import {
   Column,
   Entity,
-  JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
 } from 'typeorm';
 
 import { ApiProperty } from '@nestjs/swagger';
 
 import { CommonColumns } from 'src/common/entities/common.entity';
-import { User } from 'src/modules/user/entity/user.entity';
 import { Message } from 'src/modules/message/entity/message.entity';
+import { User } from 'src/modules/user/entity/user.entity';
 
 @Entity({ name: 'chats' })
 export class Chat extends CommonColumns {

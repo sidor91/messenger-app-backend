@@ -1,9 +1,11 @@
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+
 import { ApiProperty } from '@nestjs/swagger';
+
 import { CommonColumns } from 'src/common/entities/common.entity';
 import { Chat } from 'src/modules/chat/entity/chat.entity';
 import { Message } from 'src/modules/message/entity/message.entity';
 import { User } from 'src/modules/user/entity/user.entity';
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
 enum NotificationEnum {
   NEW_MESSAGE = 'new_message',
