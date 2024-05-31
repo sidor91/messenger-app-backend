@@ -1,14 +1,13 @@
 import {
   Column,
   Entity,
-  // JoinColumn, OneToMany
+  JoinColumn, ManyToMany, OneToMany
 } from 'typeorm';
 
 import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger';
 
 import { CommonColumns } from 'src/common/entities/common.entity';
-// import { Order } from 'src/order/entities/order.entity';
-// import { Transaction } from 'src/transaction/entities/transaction.entity';
+import { Chat } from 'src/modules/chat/entity/chat.entity';
 
 @Entity({ name: 'users' })
 export class User extends CommonColumns {
@@ -67,6 +66,13 @@ export class User extends CommonColumns {
   avatar?: string;
 
   @ApiProperty({
+    example: 'true',
+    description: 'Is user online',
+  })
+  @Column({ type: 'boolean', default: false })
+  is_online?: boolean;
+
+  @ApiProperty({
     example:
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImMzMTMzYjMyLTBlODAtNGE3Mi1hYjBlLWY5ZDBjYWI1NjM0NSIsImFkZHJlc3MiOiIweGUzNjMxNkZiREVFOWY5Q0M5MkM0YkRhOEQxRTY4MmY1QTk3RjkxMGUiLCJpYXQiOjE3MTI2ODI3MzMsImV4cCI6MTcxMjY4MzYzM30.3ccOn-WmMO668C2lUPWkgVvCT9Ej81ZkY1Jnctri--E',
     description: 'Refresh token',
@@ -82,13 +88,8 @@ export class User extends CommonColumns {
   @Column({ type: 'varchar', nullable: true, default: null })
   access_token?: string;
 
-  // @OneToMany(() => Order, (orders) => orders.user)
-  // @JoinColumn({ name: 'order_id', referencedColumnName: 'id' })
-  // orders: Order[];
-
-  // @OneToMany(() => Transaction, (transactions) => transactions.user)
-  // @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
-  // transactions: Transaction;
+  @ManyToMany(() => Chat, (chat) => chat.chat_members)
+  member_of_chats?: Chat[];
 }
 
 export class PartialUserDto extends PartialType(User) {}
