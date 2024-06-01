@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -22,6 +22,10 @@ export class UserService {
 
   async findOne(request = {}) {
     return await this.userRepository.findOne({ where: request });
+  }
+
+  async findByIds(dto: string[]) {
+    return await this.userRepository.findBy({ id: In(dto) });
   }
 
   async create(dto: User) {
