@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AppConfigModule } from './config/app-config.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { MessageModule } from './modules/message/message.module';
-import { NotificationsModule } from './modules/notifications/notifications.module';
+import { NotificationModule } from './modules/notification/notification.module';
 import { UserModule } from './modules/user/user.module';
 
 @Module({
@@ -16,9 +15,8 @@ import { UserModule } from './modules/user/user.module';
     AppConfigModule,
     ChatModule,
     MessageModule,
-    NotificationsModule,
+    NotificationModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
