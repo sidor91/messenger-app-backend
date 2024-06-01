@@ -19,14 +19,14 @@ export class Message extends CommonColumns {
     example: 'false',
     description: 'Was the message edited',
   })
-  @Column({ type: 'boolean' })
-  is_edited: boolean;
+  @Column({ type: 'boolean', default: false })
+  is_edited?: boolean;
 
   @ManyToOne(() => Chat, (chat) => chat.messages)
   @JoinColumn({ name: 'chat_id', referencedColumnName: 'id' })
-  chat: Chat;
+  chat?: Chat;
 
   @ManyToOne(() => User, (user) => user.id)
   @JoinColumn({ name: 'sender', referencedColumnName: 'id' })
-  sender: User;
+  sender: string;
 }
