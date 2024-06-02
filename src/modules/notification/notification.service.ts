@@ -1,15 +1,17 @@
+import { Repository } from 'typeorm';
+
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+
 import { Notification } from './entity/notification.entity';
-import { Repository } from 'typeorm';
 
 @Injectable()
 export class NotificationService {
   constructor(
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
-  ) { }
-  
+  ) {}
+
   async findOne(request = {}) {
     return await this.notificationRepository.findOne({ where: request });
   }
@@ -21,7 +23,9 @@ export class NotificationService {
   async update(dto: Notification) {
     const notification = await this.findOne({ id: dto.id });
     if (!notification) {
-      throw new NotFoundException(`Notification with ID ${dto.id} wasn't not found`);
+      throw new NotFoundException(
+        `Notification with ID ${dto.id} wasn't not found`,
+      );
     }
 
     Object.assign(notification, dto);

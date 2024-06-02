@@ -1,9 +1,15 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { Public } from 'src/@decorators/public.decorator';
-import { SendMessageDto, SendMessageResponseDto } from './dto/send-message.dto';
-import { ChatService } from './chat.service';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+
 import { GetCurrentUserId } from 'src/@decorators/getCurrentUserId.decorator';
+
+import { ChatService } from './chat.service';
+import { SendMessageDto, SendMessageResponseDto } from './dto/send-message.dto';
 
 @ApiTags('Chat API')
 @Controller('chat')

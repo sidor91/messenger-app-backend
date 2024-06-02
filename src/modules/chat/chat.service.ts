@@ -1,3 +1,5 @@
+import { Repository } from 'typeorm';
+
 import {
   HttpException,
   HttpStatus,
@@ -5,14 +7,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Chat } from './entity/chat.entity';
-import { SendMessageDto } from './dto/send-message.dto';
-import { User } from '../user/entity/user.entity';
-import { NotificationService } from '../notification/notification.service';
+
 import { MessageService } from '../message/message.service';
-import { UserService } from '../user/user.service';
 import { NotificationEnum } from '../notification/entity/notification.entity';
+import { NotificationService } from '../notification/notification.service';
+import { User } from '../user/entity/user.entity';
+import { UserService } from '../user/user.service';
+
+import { SendMessageDto } from './dto/send-message.dto';
+import { Chat } from './entity/chat.entity';
 
 @Injectable()
 export class ChatService {

@@ -1,7 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { Message } from './entity/message.entity';
+
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+
+import { Message } from './entity/message.entity';
 
 @Injectable()
 export class MessageService {
@@ -12,7 +14,7 @@ export class MessageService {
 
   async findOne(request = {}) {
     return await this.messageRepository.findOne({
-      where: request
+      where: request,
     });
   }
 

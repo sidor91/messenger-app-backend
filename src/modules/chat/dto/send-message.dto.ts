@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, IsArray } from 'class-validator';
+import { IsArray, IsOptional, IsString } from 'class-validator';
+
 import { SuccessDto } from 'src/common/dto/success.dto';
 
 export class SendMessageDto {
@@ -27,8 +28,7 @@ export class SendMessageDto {
 
 export class SendMessageResponseDto extends SuccessDto {
   @ApiProperty({
-    example:
-      'The message was successfully sent',
+    example: 'The message was successfully sent',
     description: 'Send message response',
   })
   message: string;
