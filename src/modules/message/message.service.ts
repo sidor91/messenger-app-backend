@@ -12,8 +12,7 @@ export class MessageService {
 
   async findOne(request = {}) {
     return await this.messageRepository.findOne({
-      where: request,
-      relations: ['user, chat, notification, chat_members'],
+      where: request
     });
   }
 

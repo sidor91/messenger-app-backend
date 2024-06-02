@@ -20,26 +20,26 @@ export class Chat extends CommonColumns {
     example: 'chatname',
     description: 'chat name',
   })
-  @Column({ type: 'varchar' })
-  name: string;
+  @Column({ type: 'varchar', nullable: true })
+  name?: string;
 
   @ApiProperty({
     example: 'false',
     description: 'Is personal or group chat',
   })
-  @Column({ type: 'boolean' })
+  @Column({ type: 'boolean', default: false })
   is_group_chat: boolean;
 
   @ApiProperty({
     example: 'https://somedomain/:avatarid',
     description: 'Avatar Url',
   })
-  @Column({ type: 'varchar', nullable: true, default: null })
+  @Column({ type: 'varchar', nullable: true })
   avatar?: string;
 
   @ManyToOne(() => User, (user) => user.id)
   @JoinColumn({ name: 'admin', referencedColumnName: 'id' })
-  admin: User;
+  admin?: User;
 
   @ManyToMany(() => User, (user) => user.member_of_chats)
   @JoinTable({
@@ -47,8 +47,8 @@ export class Chat extends CommonColumns {
     joinColumn: { name: 'chat_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'user_id', referencedColumnName: 'id' },
   })
-  chat_members: User[];
+  chat_members?: User[];
 
   @OneToMany(() => Message, (message) => message.chat)
-  messages: Message[];
+  messages?: Message[];
 }
