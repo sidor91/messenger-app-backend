@@ -38,7 +38,7 @@ export class ChatService {
   async update(dto: Chat) {
     const chat = await this.findOne({ id: dto.id });
     if (!chat) {
-      throw new NotFoundException(`Chat with ID ${dto.id} wasn't not found`);
+      throw new NotFoundException(`Chat with ID ${dto.id} doesn't exist`);
     }
 
     Object.assign(chat, dto);

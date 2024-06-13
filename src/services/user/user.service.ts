@@ -4,11 +4,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'express';
 
-import { setCookies } from 'src/services/cookies.service';
+import { setCookies } from 'src/utils/cookies.util';
 import {
   objectFieldRemoval,
   userFieldsToRemove,
-} from 'src/services/object-field-removal.service';
+} from 'src/utils/object-field-removal.util';
 
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entity/user.entity';

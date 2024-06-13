@@ -1,9 +1,9 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
 import { CommonColumns } from 'src/common/entities/common.entity';
-import { Chat } from 'src/modules/chat/entity/chat.entity';
-import { Message } from 'src/modules/message/entity/message.entity';
-import { User } from 'src/modules/user/entity/user.entity';
+import { Chat } from 'src/services/chat/entity/chat.entity';
+import { Message } from 'src/services/message/entity/message.entity';
+import { User } from 'src/services/user/entity/user.entity';
 
 export enum NotificationEnum {
   NEW_MESSAGE = 'new_message',

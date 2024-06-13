@@ -6,13 +6,13 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 
-import { JwtTokenService } from 'src/modules/jwt-token/jwt-token.service';
-import { setCookies } from 'src/services/cookies.service';
-import { CryptoService } from 'src/services/crypto.service';
+import { JwtTokenService } from 'src/services/jwt-token/jwt-token.service';
+import { setCookies } from 'src/utils/cookies.util';
+import { CryptoService } from '../crypto/crypto.service';
 import {
   objectFieldRemoval,
   userFieldsToRemove,
-} from 'src/services/object-field-removal.service';
+} from 'src/utils/object-field-removal.util';
 
 import { UserService } from '../user/user.service';
 

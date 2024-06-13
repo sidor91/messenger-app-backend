@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
-import { JwtTokenService } from 'src/modules/jwt-token/jwt-token.service';
+import { JwtTokenService } from 'src/services/jwt-token/jwt-token.service';
 
 @Injectable()
 export class JwtRefreshAuthGuard extends AuthGuard('jwt') {
