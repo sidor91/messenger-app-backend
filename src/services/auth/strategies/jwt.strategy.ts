@@ -13,7 +13,7 @@ interface RequestWithToken extends Request {
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly authService: AuthService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: (req) => req.access_token,
       secretOrKey: process.env.JWT_SECRET,
       passReqToCallback: true,
     });

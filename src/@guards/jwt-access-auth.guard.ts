@@ -21,8 +21,11 @@ export class JwtAccessAuthGuard extends AuthGuard('jwt') {
 
     if (isPublic) return true;
 
-    const request = context.switchToHttp().getRequest();
-    const authHeader = request.headers.authorization;
+    const request = this.getRequest(context);
+
+    const authHeader =
+      request.headers?.authorization ||
+      request.handshake?.headers?.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
@@ -38,5 +41,14 @@ export class JwtAccessAuthGuard extends AuthGuard('jwt') {
       throw err || new UnauthorizedException();
     }
     return user;
+  }
+
+  getRequest(context: ExecutionContext) {
+    if (context.getType() === 'http') {
+      return context.switchToHttp().getRequest();
+    } else if (context.getType() === 'ws') {
+      return context.switchToWs().getClient();
+    }
+    return context.switchToHttp().getRequest();
   }
 }
