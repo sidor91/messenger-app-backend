@@ -17,7 +17,7 @@ export class JwtRefreshAuthGuard extends AuthGuard('jwt') {
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
 
-    const token = request.cookies['refreshToken'];
+    const token = request.cookies['refresh_token'];
 
     if (!token) {
       throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
