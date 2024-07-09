@@ -17,7 +17,7 @@ export class SendMessageDto {
     description: 'message recipient id',
   })
   @IsArray({ message: 'Recipients are must be a string array' })
-  recipient_id: string[];
+  recipients: string[];
 
   @ApiProperty({
     example: 'Hello World',

@@ -3,8 +3,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { PassportModule } from '@nestjs/passport';
 
 import { JwtAccessAuthGuard } from 'src/@guards/jwt-access-auth.guard';
-import { CryptoService } from '../crypto/crypto.service';
 
+import { CryptoService } from '../crypto/crypto.service';
 import { JwtTokenModule } from '../jwt-token/jwt-token.module';
 import { UserModule } from '../user/user.module';
 

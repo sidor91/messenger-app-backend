@@ -24,6 +24,20 @@ export class UserService {
     return await this.userRepository.findOne({ where: request });
   }
 
+  async findAll(request = {}) {
+    return await this.userRepository.find({ where: request });
+  }
+
+  async getAllUsers() {
+    const users = await this.findAll();
+    if (users.length > 0) {
+      return users.map((user) =>
+        objectFieldRemoval(user, userFieldsToRemove.PASSWORD_AND_TOKENS),
+      );
+    }
+    return users;
+  }
+
   async findByIds(dto: string[]) {
     return await this.userRepository.findBy({ id: In(dto) });
   }

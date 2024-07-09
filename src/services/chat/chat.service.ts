@@ -27,8 +27,8 @@ export class ChatService {
     private readonly userService: UserService,
   ) {}
 
-  async findOne(request = {}) {
-    return await this.chatRepository.findOne({ where: request });
+  async findOne(where = {}, relations: string[] = []) {
+    return await this.chatRepository.findOne({ where, relations });
   }
 
   async create(dto: Chat) {
@@ -52,9 +52,96 @@ export class ChatService {
     return { success: true };
   }
 
-  async sendMessage(dto: SendMessageDto, userId: string) {
-    const { text, recipient_id } = dto;
-    const is_group_chat = recipient_id.length > 1;
+  getNotificationsForCurrentUser(chats: Chat[], userId: string) {
+    return chats.map((chat) => {
+      if (chat.notifications && chat.notifications.length) {
+        chat.notifications = chat.notifications.filter((notification) => {
+          if (notification.recipient?.id) {
+            return notification.recipient.id !== userId;
+          }
+        });
+        return chat;
+      }
+    });
+  }
+
+  async createNewChat(dto: Chat) {
+    const { chat_members, is_group_chat } = dto;
+    if (!is_group_chat) {
+      const memberIds = chat_members.map((member) => member.id);
+      const existingChat = await this.chatRepository
+        .createQueryBuilder('chat')
+        .innerJoin('chat.chat_members', 'member')
+        .where('member.id IN (:...memberIds)', { memberIds })
+        .groupBy('chat.id')
+        .having('COUNT(member.id) = :memberCount', {
+          memberCount: memberIds.length,
+        })
+        .getOne();
+
+      if (existingChat) return false;
+    }
+    const newChat = await this.create(dto);
+    return await this.chatRepository
+      .createQueryBuilder('chat')
+      .leftJoinAndSelect('chat.chat_members', 'member')
+      .leftJoinAndSelect('chat.messages', 'message')
+      .leftJoinAndSelect('chat.notifications', 'notification')
+      .leftJoinAndSelect('notification.recipient', 'recipient')
+      .where('chat.id = :id', { id: newChat.id })
+      .getOne();
+  }
+
+  async getAllChatsByUserId(id: string) {
+    const chats = await this.chatRepository
+      .createQueryBuilder('chat')
+      .leftJoinAndSelect('chat.chat_members', 'member')
+      .leftJoinAndSelect('chat.messages', 'message')
+      .leftJoinAndSelect('chat.notifications', 'notification')
+      .leftJoinAndSelect('notification.recipient', 'recipient')
+      .where((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('chat.id')
+          .from(Chat, 'chat')
+          .leftJoin('chat.chat_members', 'user')
+          .where('user.id = :id', { id })
+          .getQuery();
+        return 'chat.id IN ' + subQuery;
+      })
+      .select([
+        'chat.id',
+        'chat.name',
+        'chat.is_group_chat',
+        'chat.avatar',
+        'member.id',
+        'member.username',
+        'member.username',
+        'member.first_name',
+        'member.last_name',
+        'member.avatar',
+        'member.is_online',
+        'message.id',
+        'message.created_at',
+        'message.text',
+        'message.is_edited',
+        'notification.id',
+        'notification.type',
+        'recipient.id',
+      ])
+      .getMany();
+
+    const chatsWithFilteredNotifications = this.getNotificationsForCurrentUser(
+      chats,
+      id,
+    );
+
+    return chatsWithFilteredNotifications;
+  }
+
+  async sendMessage(dto: SendMessageDto, currentUserId: string) {
+    const { text, recipients } = dto;
+    const is_group_chat = recipients.length > 1;
     try {
       let chat: Chat;
       let chat_members: User[];
@@ -73,8 +160,8 @@ export class ChatService {
         chat_members = chat.chat_members;
       } else {
         chat_members = await this.userService.findByIds([
-          ...recipient_id,
-          userId,
+          ...recipients,
+          currentUserId,
         ]);
         chat = await this.create({ chat_members, is_group_chat });
       }
@@ -82,12 +169,14 @@ export class ChatService {
       const message = await this.messageService.create({
         text,
         chat,
-        sender: userId,
+        sender: currentUserId,
       });
 
-      const recipients = chat_members.filter(({ id }) => id !== userId);
+      const recipient_list = chat_members.filter(
+        ({ id }) => id !== currentUserId,
+      );
 
-      for (const recipient of recipients) {
+      for (const recipient of recipient_list) {
         await this.notificationService.create({
           message,
           chat,

@@ -56,4 +56,10 @@ export class UserController {
   ) {
     return this.userService.delete(userId, response);
   }
+
+  @Get('/all')
+  @ApiBearerAuth()
+  getAllUsersExceptCurrent() {
+    return this.userService.getAllUsers();
+  }
 }

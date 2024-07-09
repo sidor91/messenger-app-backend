@@ -12,6 +12,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { CommonColumns } from 'src/common/entities/common.entity';
 import { Message } from 'src/services/message/entity/message.entity';
+import { Notification } from 'src/services/notification/entity/notification.entity';
 import { User } from 'src/services/user/entity/user.entity';
 
 @Entity({ name: 'chats' })
@@ -51,4 +52,7 @@ export class Chat extends CommonColumns {
 
   @OneToMany(() => Message, (message) => message.chat)
   messages?: Message[];
+
+  @OneToMany(() => Notification, (notification) => notification.chat)
+  notifications?: Notification[];
 }

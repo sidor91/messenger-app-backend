@@ -1,41 +1,124 @@
-import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway } from '@nestjs/websockets';
-import { ChatService } from '../chat/chat.service';
-import { Socket } from 'socket.io';
-import { JwtService } from '@nestjs/jwt';
-import { UseGuards } from '@nestjs/common';
-import { JwtAccessAuthGuard } from 'src/@guards/jwt-access-auth.guard';
+import { forwardRef, Inject, Logger } from '@nestjs/common';
+import {
+  ConnectedSocket,
+  MessageBody,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
+  WsException,
+} from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
 
-@WebSocketGateway()
+import { ChatService } from '../chat/chat.service';
+import { SendMessageDto } from '../chat/dto/send-message.dto';
+import { JwtTokenService } from '../jwt-token/jwt-token.service';
+import { User } from '../user/entity/user.entity';
+
+@WebSocketGateway({
+  cors: {
+    origin: process.env.CLIENT_URL,
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Authorization'],
+    credentials: true,
+  },
+})
 export class WebsocketGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
-  constructor(
-    private readonly chatService: ChatService,
-    private readonly jwtService: JwtService,
-  ) {}
+  @WebSocketServer()
+  server: Server;
 
-  async handleConnection(@ConnectedSocket() client: Socket, ...args: any[]) {
-    // try {
-    //   const token = client.handshake.query.token as string;
-    //   const payload = this.jwtService.verify(token);
-    //   console.log('payload', payload);
-    //   // client.data.user = payload;
-    // } catch (e) {
-    //   console.log('error', e);
-    //   client.disconnect(); // Отключить клиента при неудачной аутентификации
-    // }
+  logger: Logger;
+  constructor(
+    @Inject(forwardRef(() => ChatService))
+    private readonly chatService: ChatService,
+    private readonly jwtTokenService: JwtTokenService,
+  ) {
+    this.logger = new Logger(WebsocketGateway.name);
+  }
+
+  async handleConnection(@ConnectedSocket() socket: Socket) {
+    try {
+      const authHeader = socket.handshake.auth.token as string;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        throw new WsException('Forbidden');
+      }
+      const token = authHeader.split(' ')[1];
+      const payload = this.jwtTokenService.verify(token);
+      socket.data.userId = payload.id;
+      this.logger.warn(`Client ${socket.id} connected`);
+    } catch (e) {
+      this.logger.error('Error while connecting client:', e.message);
+      socket.emit('tokenExpired');
+      socket.disconnect();
+    }
   }
 
   handleDisconnect(client: Socket) {
-    console.log(`Client disconnected: ${client.id}`);
+    this.logger.log(`Client disconnected: ${client.id}`);
   }
 
-  @UseGuards(JwtAccessAuthGuard)
+  getAllSockets(): Socket[] {
+    const sockets = this.server.sockets.sockets;
+    return Object.values(sockets);
+  }
+
   @SubscribeMessage('message')
-  handleMessage(
-    @MessageBody() data: string,
-    @ConnectedSocket() client: Socket,
-  ): string {
-    return 'Hello world!';
+  async handleMessage(
+    @MessageBody() data: SendMessageDto,
+    @ConnectedSocket() socket: Socket,
+  ): Promise<Record<string, string> | string> {
+    try {
+      const { recipients, text, chat_id } = data;
+      const { userId } = socket.data;
+      await this.chatService.sendMessage({ recipients, text, chat_id }, userId);
+      this.server.to(chat_id).emit('message', { text, user_id: userId });
+      // return { text, user_id: this._userId };
+    } catch (error) {
+      socket.emit('tokenExpired', { message: 'Token has expired' });
+      return 'Error!';
+    }
+  }
+
+  @SubscribeMessage('get-chats')
+  async getAllUsersChats(@ConnectedSocket() socket: Socket) {
+    const { userId } = socket.data;
+    const chats = await this.chatService.getAllChatsByUserId(userId);
+    for (const chat of chats) {
+      socket.join(chat.id);
+    }
+    return chats;
+  }
+
+  // async addSocketToRoom(rooms: string[]) {
+
+  // }
+
+  @SubscribeMessage('new-chat')
+  async createNewChat(
+    @MessageBody() data: { chat_members: User[]; name?: string },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    const newChat = await this.chatService.createNewChat({
+      ...data,
+      is_group_chat: data.chat_members.length > 2,
+    });
+
+    if (!newChat) {
+      socket.emit('new-chat', false);
+      return;
+    }
+
+    for (const member of data.chat_members) {
+      const sockets = await this.server.fetchSockets();
+      const memberSocket = sockets.find((s) => s.data.userId === member.id);
+
+      if (memberSocket) {
+        memberSocket.join(newChat.id);
+        memberSocket.emit('new-chat', newChat);
+      }
+    }
   }
 }
