@@ -53,15 +53,13 @@ export class ChatService {
   }
 
   getNotificationsForCurrentUser(chats: Chat[], userId: string) {
-    return chats.map((chat) => {
-      if (chat.notifications && chat.notifications.length) {
-        chat.notifications = chat.notifications.filter((notification) => {
-          if (notification.recipient?.id) {
-            return notification.recipient.id !== userId;
-          }
-        });
-        return chat;
+  return chats.map((chat) => {
+      if (chat.notifications && chat.notifications.length > 0) {
+        chat.notifications = chat.notifications.filter(
+          (notification) => notification.recipient.id !== userId,
+        );
       }
+    return chat;
     });
   }
 
@@ -130,13 +128,12 @@ export class ChatService {
         'recipient.id',
       ])
       .getMany();
-
-    const chatsWithFilteredNotifications = this.getNotificationsForCurrentUser(
-      chats,
-      id,
-    );
-
-    return chatsWithFilteredNotifications;
+    
+    if (chats.length > 0) {
+      return this.getNotificationsForCurrentUser(chats, id);
+    }
+     
+    return chats;
   }
 
   async sendMessage(dto: SendMessageDto, currentUserId: string) {
