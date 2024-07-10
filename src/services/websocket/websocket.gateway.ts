@@ -86,8 +86,10 @@ export class WebsocketGateway
   async getAllUsersChats(@ConnectedSocket() socket: Socket) {
     const { userId } = socket.data;
     const chats = await this.chatService.getAllChatsByUserId(userId);
-    for (const chat of chats) {
-      socket.join(chat.id);
+    if (chats && chats.length > 0) {
+      for (const chat of chats) {
+        socket.join(chat.id);
+      }
     }
     return chats;
   }
