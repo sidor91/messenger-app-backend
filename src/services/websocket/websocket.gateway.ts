@@ -31,6 +31,8 @@ export class WebsocketGateway
   server: Server;
 
   logger: Logger;
+  private userSocketMap: Map<string, Socket> = new Map();
+
   constructor(
     @Inject(forwardRef(() => ChatService))
     private readonly chatService: ChatService,
@@ -39,15 +41,20 @@ export class WebsocketGateway
     this.logger = new Logger(WebsocketGateway.name);
   }
 
+  verifyConnection(socket: Socket) {
+    const authHeader = socket.handshake.auth.token as string;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new WsException('Forbidden');
+    }
+    const token = authHeader.split(' ')[1];
+    return this.jwtTokenService.verify(token);;
+  }
+
   async handleConnection(@ConnectedSocket() socket: Socket) {
     try {
-      const authHeader = socket.handshake.auth.token as string;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        throw new WsException('Forbidden');
-      }
-      const token = authHeader.split(' ')[1];
-      const payload = this.jwtTokenService.verify(token);
+      const payload = this.verifyConnection(socket);
       socket.data.userId = payload.id;
+      this.userSocketMap.set(payload.id, socket);
       this.logger.warn(`Client ${socket.id} connected`);
     } catch (e) {
       this.logger.error('Error while connecting client:', e.message);
@@ -57,12 +64,15 @@ export class WebsocketGateway
   }
 
   handleDisconnect(client: Socket) {
+    const userId = client.data.userId;
+    if (userId) {
+      this.userSocketMap.delete(userId);
+    }
     this.logger.log(`Client disconnected: ${client.id}`);
   }
 
   getAllSockets(): Socket[] {
-    const sockets = this.server.sockets.sockets;
-    return Object.values(sockets);
+    return Array.from(this.userSocketMap.values());
   }
 
   @SubscribeMessage('message')
@@ -74,8 +84,9 @@ export class WebsocketGateway
       const { recipients, text, chat_id } = data;
       const { userId } = socket.data;
       await this.chatService.sendMessage({ recipients, text, chat_id }, userId);
-      this.server.to(chat_id).emit('message', { text, user_id: userId });
-      // return { text, user_id: this._userId };
+      this.server
+        .to(chat_id)
+        .emit('message', { text, user_id: userId, chat_id });
     } catch (error) {
       socket.emit('tokenExpired', { message: 'Token has expired' });
       return 'Error!';
@@ -86,8 +97,10 @@ export class WebsocketGateway
   async getAllUsersChats(@ConnectedSocket() socket: Socket) {
     const { userId } = socket.data;
     const chats = await this.chatService.getAllChatsByUserId(userId);
-    for (const chat of chats) {
-      socket.join(chat.id);
+    if (chats && chats.length > 0) {
+      for (const chat of chats) {
+        socket.join(chat.id);
+      }
     }
     return chats;
   }
@@ -112,9 +125,7 @@ export class WebsocketGateway
     }
 
     for (const member of data.chat_members) {
-      const sockets = await this.server.fetchSockets();
-      const memberSocket = sockets.find((s) => s.data.userId === member.id);
-
+      const memberSocket = this.userSocketMap.get(member.id);
       if (memberSocket) {
         memberSocket.join(newChat.id);
         memberSocket.emit('new-chat', newChat);
