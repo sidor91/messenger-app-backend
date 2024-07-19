@@ -130,7 +130,7 @@ export class WebsocketGateway
         memberSocket.join(newChat.id);
         memberSocket.emit('new-chat', newChat);
       }
-      console.log('No memberSocket found') 
+      // console.log('No memberSocket found') 
     }
   }
 }
