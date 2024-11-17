@@ -10,6 +10,7 @@ const databaseConfig: TypeOrmModuleOptions = {
   synchronize: true,
   autoLoadEntities: true,
   logging: true,
+  migrations: [__dirname + '/../db/migrations/*.ts'],
 };
 
 export default registerAs('typeorm', () => databaseConfig);

@@ -14,9 +14,17 @@ export abstract class CommonColumns {
   @PrimaryGeneratedColumn('uuid')
   id?: string;
 
+  @ApiProperty({
+    example: '2024-05-20 16:42:02.966148+03',
+    description: 'created at',
+  })
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at?: string;
+  created_at?: Date;
 
+  @ApiProperty({
+    example: '2024-05-20 16:42:02.966148+03',
+    description: 'updated at',
+  })
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at?: string;
+  updated_at?: Date;
 }
