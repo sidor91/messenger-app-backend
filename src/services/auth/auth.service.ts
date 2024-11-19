@@ -8,45 +8,67 @@ import { Response } from 'express';
 
 import { JwtTokenService } from 'src/services/jwt-token/jwt-token.service';
 import { setCookies } from 'src/utils/cookies.util';
-import {
-  objectFieldRemoval,
-  userFieldsToRemove,
-} from 'src/utils/object-field-removal.util';
 
 import { CryptoService } from '../crypto/crypto.service';
 import { UserService } from '../user/user.service';
 
 import { LoginDto } from './dto/login.dto';
 import { UserRegisterDto } from './dto/register.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Auth, PartialAuthDto } from './entity/auth.entity';
+import { FindOneOptions, Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
   constructor(
+    @InjectRepository(Auth)
+    private readonly authRepository: Repository<Auth>,
     private readonly userService: UserService,
     private readonly jwtTokenService: JwtTokenService,
     private readonly cryptoService: CryptoService,
   ) {}
 
-  async validateUser(payload: {
+  private async findOne(options: FindOneOptions<Auth>) {
+    return await this.authRepository.findOne(options);
+  }
+
+  private async update(id: string, dto: PartialAuthDto) {
+    return await this.authRepository.update(id, dto);
+  }
+
+  public async validateUser(payload: {
     id: string;
     password_hash: string;
     access_token: string;
   }) {
     const { id, password_hash, access_token } = payload;
+
     if (!id || !password_hash || !access_token) return false;
-    return await this.userService.findOne(payload);
+
+    const authData = await this.findOne({
+      where: { password_hash, access_token, user: { id } },
+      relations: { user: true },
+    });
+
+    if (!authData) {
+      return false;
+    }
+
+    return authData.user;
   }
 
-  async register(dto: UserRegisterDto, response: Response) {
+  public async register(dto: UserRegisterDto, response: Response) {
     const { username, email, phone, password, ...restDto } = dto;
 
-    const isExists = await this.userService.findOne([
-      { email },
-      { username },
-      { phone },
-    ]);
+    const authData = await this.authRepository
+      .createQueryBuilder('auth')
+      .innerJoinAndSelect('auth.user', 'user')
+      .where('user.email = :email', { email })
+      .orWhere('user.username = :username', { username })
+      .orWhere('user.phone = :phone', { phone })
+      .getOne();
 
-    if (isExists)
+    if (authData)
       throw new HttpException(
         'User with such email or username is already exists',
         HttpStatus.BAD_REQUEST,
@@ -54,10 +76,9 @@ export class AuthService {
 
     const password_hash = await this.cryptoService.hashPassword(password);
 
-    const newUser = await this.userService.create({
+    const newUser = this.userService.create({
       username,
       email,
-      password_hash,
       phone,
       ...restDto,
     });
@@ -68,29 +89,43 @@ export class AuthService {
       password_hash,
     });
 
-    const updatedUser = await this.userService.create({
-      ...newUser,
-      ...tokens,
-    });
+     const queryRunner =
+       this.authRepository.manager.connection.createQueryRunner();
+     await queryRunner.connect();
+     await queryRunner.startTransaction();
 
-    const data = objectFieldRemoval(updatedUser, userFieldsToRemove.PASSWORD);
+    try {
+      await queryRunner.manager.save(newUser);
 
-    setCookies(tokens.refresh_token, response);
+      const authEntity = this.authRepository.create({
+        ...tokens,
+        password_hash,
+        user: newUser,
+      });
+      await queryRunner.manager.save(authEntity);
 
-    return {
-      success: true,
-      data,
-    };
+      await queryRunner.commitTransaction();
+
+      setCookies(tokens.refresh_token, response);
+
+      return { success: true, data: {...newUser, access_token: tokens.access_token} };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new HttpException(
+        'Failed to register user',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    } finally {
+      await queryRunner.release();
+    }
   }
 
-  async login(dto: LoginDto, response: Response) {
+  public async login(dto: LoginDto, response: Response) {
     const { login, password } = dto;
 
-    const user = await this.userService.findOne([
-      { email: login },
-      { username: login },
-      { phone: login },
-    ]);
+    const user = await this.userService.findOne({
+      where: [{ email: login }, { username: login }, { phone: login }],
+    });
 
     if (!user)
       throw new HttpException(
@@ -98,16 +133,25 @@ export class AuthService {
         HttpStatus.BAD_REQUEST,
       );
 
+    const userAuth = await this.findOne({ where: { user: {id: user.id} } });
+
+    if (!userAuth)
+      throw new HttpException(
+        `The user with login ${login} is exists, but not authorized in the system. Please try to register one more time`,
+        HttpStatus.BAD_REQUEST,
+      );
+
     const isPasswordValid = await this.cryptoService.validatePassword(
       password,
-      user.password_hash,
+      userAuth.password_hash,
     );
 
     if (!isPasswordValid) {
       throw new HttpException('Password is wrong', HttpStatus.BAD_REQUEST);
     }
 
-    const { id, email, password_hash } = user;
+    const { id, email } = user;
+    const { password_hash } = userAuth;
 
     const newTokens = await this.jwtTokenService.generateTokens({
       id,
@@ -115,30 +159,32 @@ export class AuthService {
       password_hash,
     });
 
-    const updatedUser = await this.userService.create({
-      ...user,
+    await this.update(userAuth.id, {
       ...newTokens,
     });
-
-    const data = objectFieldRemoval(updatedUser, userFieldsToRemove.PASSWORD);
 
     setCookies(newTokens.refresh_token, response);
 
     return {
       success: true,
-      data,
+      data: { ...user, access_token: newTokens.access_token },
     };
   }
 
-  async refreshTokens(
+  public async refreshTokens(
     payload: { email: string; password_hash: string; refresh_token: string },
     response: Response,
   ) {
     const { email, password_hash, refresh_token } = payload;
 
-    const user = await this.userService.findOne({ email, password_hash });
+    const authData = await this.findOne({
+      where: { password_hash },
+      relations: { user: true },
+    });
 
-    if (!user || user.refresh_token !== refresh_token)
+    const { user } = authData;
+
+    if (!user || authData.refresh_token !== refresh_token)
       throw new UnauthorizedException({
         message: 'Refresh token is not valid!',
       });
@@ -149,18 +195,24 @@ export class AuthService {
       password_hash,
     });
 
-    await this.userService.update(user.id, newTokens);
+    await this.update(authData.id, { ...newTokens });
 
     setCookies(newTokens.refresh_token, response);
 
     return {
       success: true,
-      data: newTokens,
+      data: { access_token: newTokens.access_token },
     };
   }
 
-  async logout(userId: string, response: Response) {
-    await this.userService.update(userId, {
+  public async logout(userId: string, response: Response) {
+    const authData = await this.authRepository
+      .createQueryBuilder('auth')
+      .innerJoin('auth.user', 'user')
+      .where('user.id = :userId', { userId })
+      .getOne();
+
+    await this.update(authData.id, {
       access_token: '',
       refresh_token: '',
     });

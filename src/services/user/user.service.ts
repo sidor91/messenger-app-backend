@@ -1,14 +1,10 @@
-import { In, Repository } from 'typeorm';
+import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'express';
 
 import { setCookies } from 'src/utils/cookies.util';
-import {
-  objectFieldRemoval,
-  userFieldsToRemove,
-} from 'src/utils/object-field-removal.util';
 
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entity/user.entity';
@@ -20,47 +16,32 @@ export class UserService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async findOne(request = {}) {
-    return await this.userRepository.findOne({ where: request });
+  public async findOne(options: FindOneOptions<User>) {
+    return await this.userRepository.findOne(options);
   }
 
-  async findAll(request = {}) {
-    return await this.userRepository.find({ where: request });
+  async findAll(options: FindManyOptions<User> = {}) {
+    return await this.userRepository.find(options);
   }
 
-  async getAllUsers() {
-    const users = await this.findAll();
-    if (users.length > 0) {
-      return users.map((user) =>
-        objectFieldRemoval(user, userFieldsToRemove.PASSWORD_AND_TOKENS),
-      );
-    }
-    return users;
-  }
-
-  async findByIds(dto: string[]) {
-    return await this.userRepository.findBy({ id: In(dto) });
-  }
-
-  async create(dto: User) {
+  async save(dto: User) {
     return await this.userRepository.save(dto);
   }
 
+  create(dto: User) {
+    return this.userRepository.create(dto);
+  }
+
   async update(id: string, dto: UpdateUserDto) {
-    const user = await this.findOne({ id });
+    const user = await this.findOne({ where: { id } });
+
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    Object.assign(user, dto);
-    const updatedUser = await this.create(user);
+    const updatedUser = await this.save({...user, ...dto})
 
-    const data = objectFieldRemoval(
-      updatedUser,
-      userFieldsToRemove.PASSWORD_AND_TOKENS,
-    );
-
-    return { success: true, data };
+    return { success: true, data: updatedUser };
   }
 
   async delete(id: string, response: Response) {
@@ -70,16 +51,11 @@ export class UserService {
   }
 
   async current(userId: string) {
-    const user = await this.findOne({ id: userId });
-
-    const data = objectFieldRemoval(
-      user,
-      userFieldsToRemove.PASSWORD_AND_TOKENS,
-    );
+    const user = await this.findOne({ where: { id: userId } });
 
     return {
       success: true,
-      data,
+      data: user,
     };
   }
 }
