@@ -13,7 +13,11 @@ export enum NotificationEnum {
 
 @Entity({ name: 'notifications' })
 export class Notification extends CommonColumns {
-  @Column({ type: 'varchar' })
+  @Column({
+    type: 'enum',
+    enum: NotificationEnum,
+    default: NotificationEnum.NEW_MESSAGE,
+  })
   type: NotificationEnum;
 
   @ManyToOne(() => Chat, (chat) => chat.id)
