@@ -11,10 +11,11 @@ import { GetCurrentUserId } from 'src/@decorators/getCurrentUserId.decorator';
 import { SuccessDto } from 'src/common/dto/success.dto';
 
 import {
-  UpdateUserRequestDto,
+  UpdateUserDto,
   UpdateUserResponseDto,
 } from './dto/update-user.dto';
 import { UserService } from './user.service';
+import { GetAllUsersResponseDto } from './dto/get-all-users.dto';
 
 @ApiTags('User API')
 @Controller('user')
@@ -28,7 +29,7 @@ export class UserController {
     type: UpdateUserResponseDto,
   })
   async updateUser(
-    @Body() userDto: UpdateUserRequestDto,
+    @Body() userDto: UpdateUserDto,
     @GetCurrentUserId() userId: string,
   ) {
     return this.userService.update(userId, userDto);
@@ -59,7 +60,11 @@ export class UserController {
 
   @Get('/all')
   @ApiBearerAuth()
-  getAllUsersExceptCurrent() {
-    return this.userService.getAllUsers();
+  @ApiOperation({ summary: 'Get all users' })
+  @ApiResponse({
+    type: GetAllUsersResponseDto,
+  })
+  getAllUsers() {
+    return this.userService.findAll();
   }
 }
