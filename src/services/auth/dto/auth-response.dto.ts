@@ -1,12 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 import { SuccessDto } from 'src/common/dto/success.dto';
-import { UserWithoutPassword } from 'src/services/user/entity/user.entity';
+import { UserRegisterDto } from './register.dto';
+
+class UserWithToken extends UserRegisterDto {
+  @ApiProperty({
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImMzMTMzYjMyLTBlODAtNGE3Mi1hYjBlLWY5ZDBjYWI1NjM0NSIsImFkZHJlc3MiOiIweGUzNjMxNkZiREVFOWY5Q0M5MkM0YkRhOEQxRTY4MmY1QTk3RjkxMGUiLCJpYXQiOjE3MTI2ODI3MzMsImV4cCI6MTcxMjY4MzYzM30.3ccOn-WmMO668C2lUPWkgVvCT9Ej81ZkY1Jnctri--E',
+    description: 'Access token',
+  })
+  access_token: string;
+}
 
 export class AuthResponseDto extends SuccessDto {
   @ApiProperty({
-    type: UserWithoutPassword,
+    type: UserWithToken,
     description: 'User data',
   })
-  data: UserWithoutPassword;
+  data: UserWithToken;
 }
