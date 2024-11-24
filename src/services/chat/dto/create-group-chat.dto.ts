@@ -1,5 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsArray } from "class-validator";
+import { UserDto } from "src/services/user/dto/user.dto";
+import { ChatDto } from "./chat.dto";
 
 export class CreateGroupChatDto {
   @ApiProperty({
@@ -12,4 +14,17 @@ export class CreateGroupChatDto {
   })
   @IsArray()
   userIds: string[];
+}
+
+export class CreateGroupChatResponseDto extends ChatDto {
+  @ApiProperty({
+    type: UserDto,
+  })
+  admin: UserDto;
+
+  @ApiProperty({
+    type: UserDto,
+    isArray: true,
+  })
+  users: UserDto[];
 }
