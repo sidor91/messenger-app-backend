@@ -15,7 +15,7 @@ import {
   CreateGroupChatResponseDto,
 } from './dto/create-group-chat.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
-import { GetUserChatResponseDto } from './dto/get-user-chats.dto';
+import { GetUserChatsResponseDto } from './dto/get-user-chats.dto';
 
 @ApiTags('Chat API')
 @Controller('chat')
@@ -26,7 +26,7 @@ export class ChatController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all chats by current user' })
   @ApiResponse({
-    type: GetUserChatResponseDto,
+    type: GetUserChatsResponseDto,
     isArray: true,
   })
   async getUserChats(
