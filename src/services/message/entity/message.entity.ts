@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
 
 import { CommonColumns } from 'src/common/entities/common.entity';
 import { Chat } from 'src/services/chat/entity/chat.entity';
@@ -16,4 +16,12 @@ export class Message extends CommonColumns {
   @ManyToOne(() => User, (user) => user.id)
   @JoinColumn({ name: 'sender', referencedColumnName: 'id' })
   sender: User;
+
+  @ManyToMany(() => User, (user) => user.id)
+  @JoinTable({
+    name: 'message_recipients',
+    joinColumn: { name: 'message_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'user_id', referencedColumnName: 'id' },
+  })
+  recipients: User[];
 }
