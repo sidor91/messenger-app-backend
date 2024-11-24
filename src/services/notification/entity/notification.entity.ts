@@ -28,7 +28,7 @@ export class Notification extends CommonColumns {
   @JoinColumn({ name: 'recipient_id', referencedColumnName: 'id' })
   recipient: User;
 
-  @ManyToOne(() => Message, (message) => message.id)
+  @ManyToOne(() => Message, (message) => message.id, {onDelete: 'CASCADE'})
   @JoinColumn({ name: 'message_id', referencedColumnName: 'id' })
-  message: Message;
+  message?: Message;
 }

@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,16 +12,28 @@ export class NotificationService {
     private readonly notificationRepository: Repository<Notification>,
   ) {}
 
-  async findOne(request = {}) {
-    return await this.notificationRepository.findOne({ where: request });
+  async find(options: FindManyOptions<Notification>) {
+    return await this.notificationRepository.find(options);
   }
 
-  async create(dto: Notification) {
-    return await this.notificationRepository.save(dto);
+  async findOne(options: FindOneOptions<Notification>) {
+    return await this.notificationRepository.findOne(options);
+  }
+
+  create(dto: Notification) {
+    return this.notificationRepository.create(dto);
+  }
+
+  async save(dto: Notification | Notification[]) {
+    if (Array.isArray(dto)) {
+      return await this.notificationRepository.save(dto);
+    } else {
+      return await this.notificationRepository.save(dto);
+    }
   }
 
   async update(dto: Notification) {
-    const notification = await this.findOne({ id: dto.id });
+    const notification = await this.findOne({ where: { id: dto.id } });
     if (!notification) {
       throw new NotFoundException(
         `Notification with ID ${dto.id} wasn't not found`,
@@ -29,13 +41,12 @@ export class NotificationService {
     }
 
     Object.assign(notification, dto);
-    const updatedNotification = await this.create(notification);
+    const updatedNotification = await this.save(notification);
 
     return { success: true, data: updatedNotification };
   }
 
   async delete(id: string) {
-    await this.notificationRepository.delete(id);
-    return { success: true };
+    return await this.notificationRepository.delete(id);
   }
 }
