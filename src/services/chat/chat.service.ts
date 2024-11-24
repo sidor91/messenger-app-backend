@@ -2,6 +2,8 @@ import { Brackets, FindOneOptions, In, Repository } from 'typeorm';
 
 import {
   forwardRef,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   NotFoundException,
@@ -20,6 +22,7 @@ import { CreateGroupChatDto } from './dto/create-group-chat.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { getPagination } from 'src/utils/pagination.util';
 import { MessageService } from '../message/message.service';
+import { AddOrDeleteUserEnum, AddOrDeleteUserToChatDto } from './dto/add-user.dto';
 
 @Injectable()
 export class ChatService {
@@ -136,5 +139,48 @@ export class ChatService {
     const messages = await this.messageService.getMessagesByChatId(id, params);
 
     return { ...chat, messages };
+  }
+
+  public async addOrDeleteUserToChat(
+    dto: AddOrDeleteUserToChatDto,
+    addOrDelete: AddOrDeleteUserEnum,
+  ) {
+    const { userId, chatId } = dto;
+    const isDelete = addOrDelete === AddOrDeleteUserEnum.DELETE;
+
+    const chat = await this.findOne({
+      where: { id: chatId },
+      relations: { users: true },
+    });
+
+    if (!chat) {
+      throw new HttpException(
+        `The chat with id ${chatId} doesn't exists`,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const isUserInChat = chat.users.some((user) => user.id === userId);
+
+    if (isDelete) {
+      if (!isUserInChat) {
+        throw new HttpException(
+          `The user with id ${userId} is not in the chat ${chatId}`,
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      chat.users = chat.users.filter((user) => user.id !== userId);
+    } else {
+      if (isUserInChat) {
+        throw new HttpException(
+          `The user with id ${userId} is already in the chat`,
+          HttpStatus.CONFLICT,
+        );
+      }
+      const user = await this.userService.findOne({ where: { id: userId } });
+      chat.users.push(user);
+    }
+    
+    return this.save(chat);
   }
 }

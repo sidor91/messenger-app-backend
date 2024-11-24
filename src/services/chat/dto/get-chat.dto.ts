@@ -1,20 +1,18 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
-import { IsNotEmpty } from 'class-validator';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { ChatDto } from 'src/services/chat/dto/chat.dto';
 import { MessageDto } from 'src/services/message/dto/message.dto';
 import { UserDto } from 'src/services/user/dto/user.dto';
 
 class UserPickType extends PickType(UserDto, ['username', 'avatar', 'id']) {}
 
-class GetChatMessageDto extends MessageDto {
+class GetChatMessagesWithSenderDto extends MessageDto {
   @ApiProperty({
     type: UserPickType,
   })
   sender: UserPickType;
 }
 
-class GetChatDto extends ChatDto {
+class GetChatWithUsersDto extends ChatDto {
   @ApiProperty({
     type: UserPickType,
     isArray: true,
@@ -24,10 +22,10 @@ class GetChatDto extends ChatDto {
 
 class ChatMessagesAndCount {
   @ApiProperty({
-    type: GetChatMessageDto,
+    type: GetChatMessagesWithSenderDto,
     isArray: true,
   })
-  messages: GetChatMessageDto[];
+  messages: GetChatMessagesWithSenderDto[];
 
   @ApiProperty({
     type: Number,
@@ -35,20 +33,11 @@ class ChatMessagesAndCount {
   messagesCount: number;
 }
 
-export class GetChatByIdDto extends PaginationDto {
-  @ApiProperty({
-    type: String,
-    example: '23f67604-9c99-42e1-9ad8-ab375000ec1b',
-  })
-  @IsNotEmpty()
-  chatId: string;
-}
-
 export class GetChatByIdResponseDto {
   @ApiProperty({
-    type: GetChatDto,
+    type: GetChatWithUsersDto,
   })
-  chat: GetChatDto;
+  chat: GetChatWithUsersDto;
 
   @ApiProperty({
     type: ChatMessagesAndCount,
