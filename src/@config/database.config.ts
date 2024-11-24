@@ -9,7 +9,7 @@ const databaseConfig: TypeOrmModuleOptions = {
   url: process.env.DB_URL,
   synchronize: true,
   autoLoadEntities: true,
-  logging: true,
+  logging: false,
   migrations: [__dirname + '/../db/migrations/*.ts'],
 };
 
