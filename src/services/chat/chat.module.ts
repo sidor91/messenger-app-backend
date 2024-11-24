@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { MessageModule } from '../message/message.module';
 import { NotificationModule } from '../notification/notification.module';
 import { UserModule } from '../user/user.module';
 
@@ -11,7 +10,6 @@ import { Chat } from './entity/chat.entity';
 
 @Module({
   imports: [
-    MessageModule,
     UserModule,
     NotificationModule,
     TypeOrmModule.forFeature([Chat]),

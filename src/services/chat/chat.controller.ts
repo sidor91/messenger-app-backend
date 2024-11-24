@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -9,23 +9,42 @@ import {
 import { GetCurrentUserId } from 'src/@decorators/getCurrentUserId.decorator';
 
 import { ChatService } from './chat.service';
-import { SendMessageDto, SendMessageResponseDto } from './dto/send-message.dto';
+
+import {
+  CreateGroupChatDto,
+  CreateGroupChatResponseDto,
+} from './dto/create-group-chat.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { GetUserChatResponseDto } from './dto/get-user-chats.dto';
 
 @ApiTags('Chat API')
 @Controller('chat')
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
-  @Post('new-message')
+  @Get('user-chats')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Send message to chat' })
+  @ApiOperation({ summary: 'Get all chats by current user' })
   @ApiResponse({
-    type: SendMessageResponseDto,
+    type: GetUserChatResponseDto,
+    isArray: true,
   })
-  async sendPrivateMessage(
-    @Body() dto: SendMessageDto,
+  async getUserChats(
+    @GetCurrentUserId() userId: string,
+    @Query() params?: PaginationDto,
+  ) {
+    return this.chatService.getAllChatsByUserId(userId, params);
+  }
+
+  @Post('create-group-chat')
+  @ApiBearerAuth()
+  @ApiResponse({
+    type: CreateGroupChatResponseDto,
+  })
+  async createChat(
+    @Body() dto: CreateGroupChatDto,
     @GetCurrentUserId() userId: string,
   ) {
-    return this.chatService.sendMessage(dto, userId);
+    return this.chatService.createNewGroupChat(dto, userId);
   }
 }

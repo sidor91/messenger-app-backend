@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Res, Patch } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -22,7 +22,7 @@ import { GetAllUsersResponseDto } from './dto/get-all-users.dto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post('/update')
+  @Patch('/update')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update user' })
   @ApiResponse({

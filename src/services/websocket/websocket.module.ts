@@ -4,9 +4,10 @@ import { ChatModule } from '../chat/chat.module';
 import { JwtTokenModule } from '../jwt-token/jwt-token.module';
 
 import { WebsocketGateway } from './websocket.gateway';
+import { MessageModule } from '../message/message.module';
 
 @Module({
-  imports: [forwardRef(() => ChatModule), JwtTokenModule],
+  imports: [forwardRef(() => ChatModule), JwtTokenModule, MessageModule],
   providers: [WebsocketGateway],
   exports: [WebsocketGateway],
 })
