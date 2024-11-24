@@ -86,6 +86,7 @@ export class ChatService {
         'notification.recipient_id = :id',
         { id },
       )
+      .leftJoinAndSelect('chat.users', 'user', 'user.id != :id', { id })
       .leftJoinAndSelect('chat.messages', 'message')
       .where(
         'chat.id IN (SELECT chat_id FROM chat_members WHERE user_id = :id)',
