@@ -4,10 +4,17 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
 
 import { AppModule } from './app.module';
+import { productionLogLevel } from './common/constants';
 
 async function bootstrap() {
   console.log('Starting Messenger APP server... 🚀🚀🚀 ');
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger:
+      process.env.NODE_ENV === 'production'
+        ? productionLogLevel
+        : // TODO: add any other log level if needed
+          [...productionLogLevel],
+  });
 
   const config = new DocumentBuilder()
     .setTitle('Messenger App Project')
