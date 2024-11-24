@@ -41,12 +41,10 @@ export class NotificationService {
     }
 
     Object.assign(notification, dto);
-    const updatedNotification = await this.save(notification);
-
-    return { success: true, data: updatedNotification };
+    return await this.save(notification);
   }
 
   async delete(id: string) {
-    return await this.notificationRepository.delete(id);
+    await this.notificationRepository.delete(id);
   }
 }
