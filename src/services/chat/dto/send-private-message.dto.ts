@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 import { SuccessDto } from 'src/common/dto/success.dto';
 
-export class SendMessageDto {
+export class SendPrivateMessageDto {
   @ApiProperty({
     example: '2312ff46-d975-488d-a862-941568e0e158',
     description: 'chat id',
@@ -16,17 +16,19 @@ export class SendMessageDto {
     example: '2312ff46-d975-488d-a862-941568e0e158',
     description: 'message recipient id',
   })
-  @IsArray({ message: 'Recipients are must be a string array' })
-  recipients: string[];
+  @IsString()
+  @IsOptional()
+  recipient?: string;
 
   @ApiProperty({
     example: 'Hello World',
     description: 'message content',
   })
+  @IsString()
   text: string;
 }
 
-export class SendMessageResponseDto extends SuccessDto {
+export class SendMessageResponseDto {
   @ApiProperty({
     example: 'The message was successfully sent',
     description: 'Send message response',
