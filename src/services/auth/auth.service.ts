@@ -17,6 +17,7 @@ import { UserRegisterDto } from './dto/register.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Auth, PartialAuthDto } from './entity/auth.entity';
 import { FindOneOptions, Repository } from 'typeorm';
+import { ValidateUserDto } from './dto/validate-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -36,25 +37,15 @@ export class AuthService {
     return await this.authRepository.update(id, dto);
   }
 
-  public async validateUser(payload: {
-    id: string;
-    password_hash: string;
-    access_token: string;
-  }) {
+  public async validateUser(payload: ValidateUserDto) {
     const { id, password_hash, access_token } = payload;
-
-    if (!id || !password_hash || !access_token) return false;
 
     const authData = await this.findOne({
       where: { password_hash, access_token, user: { id } },
       relations: { user: true },
     });
 
-    if (!authData) {
-      return false;
-    }
-
-    return authData.user;
+    return authData?.user || false;
   }
 
   public async register(dto: UserRegisterDto, response: Response) {
@@ -89,10 +80,10 @@ export class AuthService {
       password_hash,
     });
 
-     const queryRunner =
-       this.authRepository.manager.connection.createQueryRunner();
-     await queryRunner.connect();
-     await queryRunner.startTransaction();
+    const queryRunner =
+      this.authRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
     try {
       await queryRunner.manager.save(newUser);
@@ -108,7 +99,10 @@ export class AuthService {
 
       setCookies(tokens.refresh_token, response);
 
-      return { success: true, data: {...newUser, access_token: tokens.access_token} };
+      return {
+        success: true,
+        data: { ...newUser, access_token: tokens.access_token },
+      };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw new HttpException(
@@ -133,7 +127,7 @@ export class AuthService {
         HttpStatus.BAD_REQUEST,
       );
 
-    const userAuth = await this.findOne({ where: { user: {id: user.id} } });
+    const userAuth = await this.findOne({ where: { user: { id: user.id } } });
 
     if (!userAuth)
       throw new HttpException(
@@ -165,10 +159,7 @@ export class AuthService {
 
     setCookies(newTokens.refresh_token, response);
 
-    return {
-      success: true,
-      data: { ...user, access_token: newTokens.access_token },
-    };
+    return { ...user, access_token: newTokens.access_token };
   }
 
   public async refreshTokens(
@@ -199,10 +190,7 @@ export class AuthService {
 
     setCookies(newTokens.refresh_token, response);
 
-    return {
-      success: true,
-      data: { access_token: newTokens.access_token },
-    };
+    return { access_token: newTokens.access_token };
   }
 
   public async logout(userId: string, response: Response) {
@@ -217,6 +205,5 @@ export class AuthService {
       refresh_token: '',
     });
     setCookies('', response);
-    return { success: true };
   }
 }
