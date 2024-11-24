@@ -1,6 +1,11 @@
 import { Brackets, FindOneOptions, In, Repository } from 'typeorm';
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import {
@@ -14,12 +19,15 @@ import { Chat } from './entity/chat.entity';
 import { CreateGroupChatDto } from './dto/create-group-chat.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { getPagination } from 'src/utils/pagination.util';
+import { MessageService } from '../message/message.service';
 
 @Injectable()
 export class ChatService {
   constructor(
     @InjectRepository(Chat)
     private readonly chatRepository: Repository<Chat>,
+    @Inject(forwardRef(() => MessageService))
+    private readonly messageService: MessageService,
     private readonly notificationService: NotificationService,
     private readonly userService: UserService,
   ) {}
@@ -78,7 +86,7 @@ export class ChatService {
     const pagination = getPagination(paginationaParams);
     const { skip, take } = pagination;
 
-    const chats = await this.chatRepository
+    const [chats, chatsCount] = await this.chatRepository
       .createQueryBuilder('chat')
       .leftJoinAndSelect(
         'chat.notifications',
@@ -109,8 +117,24 @@ export class ChatService {
       .addOrderBy('chat.created_at', 'DESC')
       .skip(skip)
       .take(take)
-      .getMany();
+      .getManyAndCount();
 
-    return chats;
+    return { chats, chatsCount };
+  }
+
+  public async getChatById(id: string, params?: PaginationDto) {
+    const chat = await this.chatRepository
+      .createQueryBuilder('chat')
+      .leftJoin('chat.users', 'user')
+      .addSelect(['user.id', 'user.avatar', 'user.username'])
+      .getOne();
+
+    if (!chat) {
+      throw new NotFoundException(`Chat with id ${id} wasn't found`);
+    }
+
+    const messages = await this.messageService.getMessagesByChatId(id, params);
+
+    return { ...chat, messages };
   }
 }

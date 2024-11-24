@@ -16,6 +16,7 @@ import {
 } from './dto/create-group-chat.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { GetUserChatsResponseDto } from './dto/get-user-chats.dto';
+import { GetChatByIdDto, GetChatByIdResponseDto } from './dto/get-chat.dto';
 
 @ApiTags('Chat API')
 @Controller('chat')
@@ -34,6 +35,19 @@ export class ChatController {
     @Query() params?: PaginationDto,
   ) {
     return this.chatService.getAllChatsByUserId(userId, params);
+  }
+
+  @Get('chat-by-id')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get chat by id' })
+  @ApiResponse({
+    type: GetChatByIdResponseDto,
+  })
+  async getChatById(
+    @Query() params?: GetChatByIdDto,
+  ) {
+    const { chatId, page, limit } = params;
+    return this.chatService.getChatById(chatId, { page, limit });
   }
 
   @Post('create-group-chat')

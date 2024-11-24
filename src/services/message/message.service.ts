@@ -1,8 +1,10 @@
 import { FindManyOptions, FindOneOptions, In, Repository } from 'typeorm';
 
 import {
+  forwardRef,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -20,12 +22,15 @@ import { ChatService } from '../chat/chat.service';
 import { UserService } from '../user/user.service';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationEnum } from '../notification/entity/notification.entity';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { getPagination } from 'src/utils/pagination.util';
 
 @Injectable()
 export class MessageService {
   constructor(
     @InjectRepository(Message)
     private readonly messageRepository: Repository<Message>,
+    @Inject(forwardRef(() => ChatService))
     private readonly chatService: ChatService,
     private readonly userService: UserService,
     private readonly notificationService: NotificationService,
@@ -177,5 +182,22 @@ export class MessageService {
     } catch (error) {
       console.log(error);
     }
+  }
+
+  public async getMessagesByChatId(id: string, params?: PaginationDto) {
+    const { skip, take } = getPagination(params);
+
+    const [messages, messagesCount] = await this.messageRepository
+      .createQueryBuilder('message')
+      .leftJoin('message.chat', 'chat')
+      .leftJoin('message.sender', 'sender')
+      .addSelect(['sender.id', 'sender.username', 'sender.avatar'])
+      .where('chat.id = :id', { id })
+      .orderBy('message.created_at', 'DESC')
+      .skip(skip)
+      .take(take)
+      .getManyAndCount();
+
+    return { messages, messagesCount };
   }
 }

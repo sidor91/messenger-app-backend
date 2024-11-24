@@ -4,7 +4,7 @@ import { NotificationDto } from 'src/services/notification/dto/notification.dto'
 import { MessageDto } from 'src/services/message/dto/message.dto';
 import { UserDto } from 'src/services/user/dto/user.dto';
 
-export class GetUserChatsResponseDto extends ChatDto {
+class GetUserChatsDto extends ChatDto {
   @ApiProperty({
     type: NotificationDto,
     isArray: true,
@@ -22,4 +22,16 @@ export class GetUserChatsResponseDto extends ChatDto {
     isArray: true,
   })
   users: UserDto[];
+}
+
+export class GetUserChatsResponseDto {
+  @ApiProperty({
+    type: GetUserChatsDto,
+  })
+  chats: GetUserChatsDto;
+
+  @ApiProperty({
+    type: Number,
+  })
+  chatsCount: number;
 }

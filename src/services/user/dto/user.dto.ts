@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { CommonDto } from 'src/common/dto/common.dto';
 
 
-export class UserDto {
+export class UserDto extends CommonDto {
   @ApiProperty({
     example: 'username',
     description: 'Username',
