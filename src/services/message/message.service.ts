@@ -21,9 +21,10 @@ import { User } from '../user/entity/user.entity';
 import { ChatService } from '../chat/chat.service';
 import { UserService } from '../user/user.service';
 import { NotificationService } from '../notification/notification.service';
-import { NotificationEnum } from '../notification/entity/notification.entity';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { getPagination } from 'src/utils/pagination.util';
+import { NotificationEnum } from '../notification/dto/notification.dto';
+import { Notification } from '../notification/entity/notification.entity';
 
 @Injectable()
 export class MessageService {
@@ -46,6 +47,10 @@ export class MessageService {
 
   async save(dto: Message) {
     return await this.messageRepository.save(dto);
+  }
+
+  create(dto: Message) {
+    return this.messageRepository.create(dto);
   }
 
   async update(dto: Message) {
@@ -106,19 +111,21 @@ export class MessageService {
       { senderDbEntry: null, recipientDbEntry: null },
     );
 
-    const message = await this.save({
+    const message = this.create({
       text,
       chat,
       sender: senderDbEntry,
       recipients: [recipientDbEntry],
     });
 
-    await this.notificationService.save({
+    const notification = this.notificationService.create({
       message,
       chat,
       recipient: recipientDbEntry,
       type: NotificationEnum.NEW_MESSAGE,
     });
+
+    await this.saveMessageWithNotifications(message, [notification]);
 
     return {
       message: `The message was sent successfully`,
@@ -158,23 +165,20 @@ export class MessageService {
         { senderDbEntry: null, recipientsDbArr: [] },
       );
 
-      const message = await this.save({
+      const message = this.create({
         text,
         chat,
         sender: senderDbEntry,
         recipients: recipientsDbArr,
       });
 
-      const notifications = recipientsDbArr.map((recipient) =>
-        this.notificationService.create({
-          message,
-          chat,
-          recipient,
-          type: NotificationEnum.NEW_MESSAGE,
-        }),
+      const notifications = this.createMessageNotifications(
+        chat,
+        message,
+        NotificationEnum.NEW_MESSAGE,
       );
 
-      await this.notificationService.save(notifications);
+      await this.saveMessageWithNotifications(message, notifications);
 
       return {
         message: `The message was successfully sent`,
@@ -199,5 +203,47 @@ export class MessageService {
       .getManyAndCount();
 
     return { messages, messagesCount };
+  }
+
+  private createMessageNotifications(
+    chat: Chat,
+    message: Message,
+    notificationType: NotificationEnum,
+  ): Notification[] {
+    const { recipients } = message;
+
+    return recipients.map((recipient) =>
+      this.notificationService.create({
+        type: notificationType,
+        message,
+        recipient,
+        chat,
+      }),
+    );
+  }
+
+  private async saveMessageWithNotifications(
+    message: Message,
+    notifications: Notification[],
+  ): Promise<Message> {
+    const queryRunner =
+      this.messageRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await queryRunner.manager.save(message);
+      await queryRunner.manager.save(notifications);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new HttpException(
+        `${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    } finally {
+      await queryRunner.release();
+    }
+
+    return message;
   }
 }

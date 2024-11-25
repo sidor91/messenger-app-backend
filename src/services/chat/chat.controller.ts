@@ -21,7 +21,7 @@ import {
   AddOrDeleteUserEnum,
   AddOrDeleteUserToChatDto,
   AddUserToChatResponseDto,
-} from './dto/add-user.dto';
+} from './dto/add-or-delete-user.dto';
 import { SuccessDto } from 'src/common/dto/success.dto';
 
 @ApiTags('Chat API')
@@ -70,9 +70,7 @@ export class ChatController {
   @ApiResponse({
     type: AddUserToChatResponseDto,
   })
-  async addUserToChat(
-    @Body() dto: AddOrDeleteUserToChatDto,
-  ) {
+  async addUserToChat(@Body() dto: AddOrDeleteUserToChatDto) {
     return this.chatService.addOrDeleteUserToChat(dto, AddOrDeleteUserEnum.ADD);
   }
 
@@ -81,9 +79,10 @@ export class ChatController {
   @ApiResponse({
     type: SuccessDto,
   })
-  async deleteUserFromChat(
-    @Body() dto: AddOrDeleteUserToChatDto,
-  ) {
-    return this.chatService.addOrDeleteUserToChat(dto, AddOrDeleteUserEnum.DELETE);
+  async deleteUserFromChat(@Body() dto: AddOrDeleteUserToChatDto) {
+    return this.chatService.addOrDeleteUserToChat(
+      dto,
+      AddOrDeleteUserEnum.DELETE,
+    );
   }
 }

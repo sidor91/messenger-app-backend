@@ -34,7 +34,7 @@ export class Chat extends CommonColumns {
     joinColumn: { name: 'chat_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'user_id', referencedColumnName: 'id' },
   })
-  users?: User[];
+  users: User[];
 
   @OneToMany(() => Message, (message) => message.chat)
   messages?: Message[];

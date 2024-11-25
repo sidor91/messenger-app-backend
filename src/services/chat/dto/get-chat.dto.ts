@@ -12,7 +12,7 @@ class GetChatMessagesWithSenderDto extends MessageDto {
   sender: UserPickType;
 }
 
-class GetChatWithUsersDto extends ChatDto {
+class ChatWithUsersPickTypeDto extends ChatDto {
   @ApiProperty({
     type: UserPickType,
     isArray: true,
@@ -35,9 +35,9 @@ class ChatMessagesAndCount {
 
 export class GetChatByIdResponseDto {
   @ApiProperty({
-    type: GetChatWithUsersDto,
+    type: ChatWithUsersPickTypeDto,
   })
-  chat: GetChatWithUsersDto;
+  chat: ChatWithUsersPickTypeDto;
 
   @ApiProperty({
     type: ChatMessagesAndCount,

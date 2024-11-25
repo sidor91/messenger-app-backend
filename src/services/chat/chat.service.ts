@@ -10,10 +10,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import {
-  Notification,
-  NotificationEnum,
-} from '../notification/entity/notification.entity';
+import { Notification } from '../notification/entity/notification.entity';
 import { NotificationService } from '../notification/notification.service';
 import { UserService } from '../user/user.service';
 
@@ -22,7 +19,12 @@ import { CreateGroupChatDto } from './dto/create-group-chat.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { getPagination } from 'src/utils/pagination.util';
 import { MessageService } from '../message/message.service';
-import { AddOrDeleteUserEnum, AddOrDeleteUserToChatDto } from './dto/add-user.dto';
+import {
+  AddOrDeleteUserEnum,
+  AddOrDeleteUserToChatDto,
+} from './dto/add-or-delete-user.dto';
+import { NotificationEnum } from '../notification/dto/notification.dto';
+import { ChatWithUsersDto } from './dto/chat.dto';
 
 @Injectable()
 export class ChatService {
@@ -66,23 +68,30 @@ export class ChatService {
       where: { id: In(userIds) },
     });
 
+    if (usersInDb.length !== userIds.length) {
+      throw new HttpException(
+        'Some users do not exist',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     const admin = usersInDb.find((user) => user.id === userId);
 
-    const newChat = await this.save({
+    const newChat = this.chatRepository.create({
       is_group_chat: true,
       users: usersInDb,
       admin,
     });
 
-    const newChatNotifications: Notification[] = usersInDb.map((user) => ({
-      type: NotificationEnum.ADDED_TO_CHAT,
-      chat: newChat,
-      recipient: user,
-    }));
+    const notifications: Notification[] = this.createChatNotifications(
+      {
+        ...newChat,
+        users: usersInDb.filter((user) => user.id !== userId),
+      } as ChatWithUsersDto,
+      NotificationEnum.ADDED_TO_CHAT,
+    );
 
-    await this.notificationService.save(newChatNotifications);
-
-    return newChat;
+    return await this.saveChatWithNotifications(newChat, notifications);
   }
 
   async getAllChatsByUserId(id: string, paginationaParams?: PaginationDto) {
@@ -162,25 +171,79 @@ export class ChatService {
 
     const isUserInChat = chat.users.some((user) => user.id === userId);
 
+    if (isDelete && !isUserInChat) {
+      throw new HttpException(
+        `The user with id ${userId} is not in the chat ${chatId}`,
+        HttpStatus.NOT_FOUND,
+      );
+    } else if (!isDelete && isUserInChat) {
+      throw new HttpException(
+        `The user with id ${userId} is already in the chat`,
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    let notifications: Notification[];
+
     if (isDelete) {
-      if (!isUserInChat) {
-        throw new HttpException(
-          `The user with id ${userId} is not in the chat ${chatId}`,
-          HttpStatus.NOT_FOUND,
-        );
-      }
       chat.users = chat.users.filter((user) => user.id !== userId);
+      notifications = this.createChatNotifications(
+        chat as ChatWithUsersDto,
+        NotificationEnum.DELETE_USER_FROM_CHAT,
+      );
+      notifications = this.createChatNotifications(
+        chat as ChatWithUsersDto,
+        NotificationEnum.DELETE_USER_FROM_CHAT,
+      );
     } else {
-      if (isUserInChat) {
-        throw new HttpException(
-          `The user with id ${userId} is already in the chat`,
-          HttpStatus.CONFLICT,
-        );
-      }
       const user = await this.userService.findOne({ where: { id: userId } });
+      notifications = this.createChatNotifications(
+        chat as ChatWithUsersDto,
+        NotificationEnum.NEW_USER_IN_CHAT,
+      );
       chat.users.push(user);
     }
-    
-    return this.save(chat);
+
+    return await this.saveChatWithNotifications(chat, notifications);
+  }
+
+  private createChatNotifications(
+    chat: Chat,
+    notificationType: NotificationEnum,
+  ): Notification[] {
+    const { users } = chat;
+
+    return users.map((user) =>
+      this.notificationService.create({
+        type: notificationType,
+        chat,
+        recipient: user,
+      }),
+    );
+  }
+
+  private async saveChatWithNotifications(
+    chat: Chat,
+    notifications: Notification[],
+  ): Promise<Chat> {
+    const queryRunner =
+      this.chatRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await queryRunner.manager.save(chat);
+      await queryRunner.manager.save(notifications);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new HttpException(
+        `${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    } finally {
+      await queryRunner.release();
+    }
+
+    return chat;
   }
 }
