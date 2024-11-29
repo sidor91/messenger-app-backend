@@ -16,7 +16,7 @@ export class ChatDto extends CommonColumns {
   @ApiProperty({
     example: 'https://example.com/1234',
   })
-  avatar: string;
+  avatar?: string;
 }
 
 export class ChatWithUsersDto extends ChatDto {

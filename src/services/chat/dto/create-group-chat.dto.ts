@@ -1,10 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsArray } from "class-validator";
+import { IsArray, IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { UserDto } from "src/services/user/dto/user.dto";
 import { ChatDto } from "./chat.dto";
 
 export class CreateGroupChatDto {
   @ApiProperty({
+    type: String,
     isArray: true,
     example: [
       '64bb7b28-e39b-47e3-8ef9-173366cb0b43',
@@ -13,7 +14,16 @@ export class CreateGroupChatDto {
     ],
   })
   @IsArray()
+  @IsNotEmpty()
   userIds: string[];
+
+  @ApiProperty({
+    type: String,
+    example: 'Friends'
+  })
+  @IsString()
+  @IsOptional()
+  name?: string
 }
 
 export class CreateGroupChatResponseDto extends ChatDto {

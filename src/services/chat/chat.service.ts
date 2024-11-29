@@ -45,6 +45,10 @@ export class ChatService {
     return await this.chatRepository.save(dto);
   }
 
+  public create(dto: Chat) {
+    return this.chatRepository.create(dto);
+  }
+
   async update(dto: Chat) {
     const chat = await this.findOne({ where: { id: dto.id } });
     if (!chat) {
@@ -59,6 +63,17 @@ export class ChatService {
   async delete(id: string) {
     await this.chatRepository.delete(id);
     return { success: true };
+  }
+
+  public async getUserChatIdsByUserId(userId: string): Promise<string[]> {
+    const chatIds = await this.chatRepository
+      .createQueryBuilder('chat')
+      .select('chat.id')
+      .innerJoin('chat.users', 'user')
+      .where('user.id = :id', { id: userId })
+      .getRawMany();
+
+    return chatIds.map((chat) => chat.id);
   }
 
   async createNewGroupChat(dto: CreateGroupChatDto, userId: string) {
@@ -234,6 +249,7 @@ export class ChatService {
     try {
       await queryRunner.manager.save(chat);
       await queryRunner.manager.save(notifications);
+      return chat;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw new HttpException(
@@ -243,7 +259,5 @@ export class ChatService {
     } finally {
       await queryRunner.release();
     }
-
-    return chat;
   }
 }
