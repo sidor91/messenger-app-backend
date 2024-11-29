@@ -14,7 +14,7 @@ export class JwtRefreshAuthGuard extends AuthGuard('jwt') {
   constructor(private readonly jwtTokenService: JwtTokenService) {
     super();
   }
-  canActivate(context: ExecutionContext) {
+  async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
 
     const token = request.cookies['refresh_token'];
@@ -24,7 +24,7 @@ export class JwtRefreshAuthGuard extends AuthGuard('jwt') {
     }
 
     try {
-      const payload = this.jwtTokenService.verify(token);
+      const payload = await this.jwtTokenService.verify(token);
       request.user = { ...payload, refresh_token: token };
     } catch (error) {
       throw new UnauthorizedException('Token is invalid');

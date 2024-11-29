@@ -1,14 +1,20 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class JwtTokenService {
-  constructor(private readonly jwtService: JwtService) {}
+  JWT_SECRET: string;
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+  ) {
+    this.JWT_SECRET = this.configService.getOrThrow('JWT_SECRET');
+  }
 
-  verify(token: string) {
-    const secret = process.env.JWT_SECRET;
-    return this.jwtService.verify(token, {
-      secret,
+  public async verify(token: string) {
+    return await this.jwtService.verifyAsync(token, {
+      secret: this.JWT_SECRET,
     });
   }
 
@@ -16,14 +22,14 @@ export class JwtTokenService {
     id: string;
     password_hash: string;
   }): Promise<string> {
-    return this.jwtService.sign(payload, { expiresIn: 300 });
+    return await this.jwtService.signAsync(payload, { expiresIn: '10h' });
   }
 
   async generateRefreshToken(payload: {
     email: string;
     password_hash: string;
   }): Promise<string> {
-    return this.jwtService.sign(payload, { expiresIn: '1d' });
+    return await this.jwtService.signAsync(payload, { expiresIn: '1d' });
   }
 
   async generateTokens(dto: {
