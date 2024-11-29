@@ -55,7 +55,7 @@ export class MessageService {
   async update(dto: Message) {
     const message = await this.findOne({ where: { id: dto.id } });
     if (!message) {
-      throw new AppError(
+      throw new HttpException(
         `Message with ID ${dto.id} wasn't not found`,
         HttpStatus.NOT_FOUND,
       );
@@ -76,7 +76,7 @@ export class MessageService {
     const { text, recipient, chat_id } = dto;
 
     if (!recipient && !chat_id) {
-      throw new AppError(
+      throw new HttpException(
         `Request must have either a recipient or a chat_id`,
         HttpStatus.BAD_REQUEST,
       );
