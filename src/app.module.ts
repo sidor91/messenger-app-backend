@@ -8,6 +8,8 @@ import { MessageModule } from './services/message/message.module';
 import { NotificationModule } from './services/notification/notification.module';
 import { UserModule } from './services/user/user.module';
 import { WebsocketModule } from './services/websocket/websocket.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ResponseInterceptor } from './@interceptors/response.interceptor';
 
 @Module({
   imports: [
@@ -20,6 +22,11 @@ import { WebsocketModule } from './services/websocket/websocket.module';
     WebsocketModule,
   ],
   controllers: [AppController],
-  providers: [],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor,
+    },
+  ],
 })
 export class AppModule {}
