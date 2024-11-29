@@ -7,6 +7,7 @@ import { MessageService } from './message.service';
 import { ChatModule } from '../chat/chat.module';
 import { UserModule } from '../user/user.module';
 import { NotificationModule } from '../notification/notification.module';
+import { DbTransactionService } from '../db-transaction/db-transaction.service';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { NotificationModule } from '../notification/notification.module';
     forwardRef(() => ChatModule),
   ],
   controllers: [MessageController],
-  providers: [MessageService],
+  providers: [MessageService, DbTransactionService],
   exports: [MessageService],
 })
 export class MessageModule {}

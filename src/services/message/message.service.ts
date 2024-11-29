@@ -6,16 +6,12 @@ import {
   HttpStatus,
   Inject,
   Injectable,
-  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Message } from './entity/message.entity';
 import { SendGroupMessageDto } from './dto/send-group-message.dto';
-import {
-  SendMessageResponseDto,
-  SendPrivateMessageDto,
-} from './dto/send-private-message.dto';
+import { SendPrivateMessageDto } from './dto/send-private-message.dto';
 import { Chat } from '../chat/entity/chat.entity';
 import { User } from '../user/entity/user.entity';
 import { ChatService } from '../chat/chat.service';
@@ -25,6 +21,8 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { getPagination } from 'src/utils/pagination.util';
 import { NotificationEnum } from '../notification/dto/notification.dto';
 import { Notification } from '../notification/entity/notification.entity';
+import { DbTransactionService } from '../db-transaction/db-transaction.service';
+import { SendMessageResponse } from './dto/send-message-response.dto';
 
 @Injectable()
 export class MessageService {
@@ -35,6 +33,7 @@ export class MessageService {
     private readonly chatService: ChatService,
     private readonly userService: UserService,
     private readonly notificationService: NotificationService,
+    private readonly dbTransactionService: DbTransactionService,
   ) {}
 
   async findOne(options: FindOneOptions<Message>) {
@@ -56,7 +55,10 @@ export class MessageService {
   async update(dto: Message) {
     const message = await this.findOne({ where: { id: dto.id } });
     if (!message) {
-      throw new NotFoundException(`Message with ID ${dto.id} wasn't not found`);
+      throw new AppError(
+        `Message with ID ${dto.id} wasn't not found`,
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     Object.assign(message, dto);
@@ -70,11 +72,11 @@ export class MessageService {
   public async sendPrivateMessage(
     dto: SendPrivateMessageDto,
     currentUserId: string,
-  ): Promise<SendMessageResponseDto> {
+  ): Promise<SendMessageResponse> {
     const { text, recipient, chat_id } = dto;
 
     if (!recipient && !chat_id) {
-      throw new HttpException(
+      throw new AppError(
         `Request must have either a recipient or a chat_id`,
         HttpStatus.BAD_REQUEST,
       );
@@ -96,7 +98,11 @@ export class MessageService {
       const users = await this.userService.findAll({
         where: { id: In([recipient, currentUserId]) },
       });
-      chat = await this.chatService.save({ users, is_group_chat: false });
+
+      if (users.length < 2)
+        throw new HttpException(`Recipient not found`, HttpStatus.NOT_FOUND);
+
+      chat = this.chatService.create({ users, is_group_chat: false });
     }
 
     const { senderDbEntry, recipientDbEntry } = chat.users.reduce(
@@ -125,67 +131,77 @@ export class MessageService {
       type: NotificationEnum.NEW_MESSAGE,
     });
 
-    await this.saveMessageWithNotifications(message, [notification]);
+    await this.dbTransactionService.saveEntitiesInTransaction([
+      chat,
+      message,
+      notification,
+    ]);
 
-    return {
-      message: `The message was sent successfully`,
+    const response = {
+      message_id: message.id,
+      text,
+      sender: senderDbEntry,
+      chat_id: chat.id,
     };
+
+    return response;
   }
 
   public async sendGroupMessage(
     dto: SendGroupMessageDto,
     currentUserId: string,
-  ): Promise<SendMessageResponseDto> {
-    try {
-      const { text, chat_id } = dto;
+  ): Promise<SendMessageResponse> {
+    const { text, chat_id } = dto;
 
-      const chat = await this.chatService.findOne({
-        where: { id: chat_id },
-        relations: ['users'],
-      });
+    const chat = await this.chatService.findOne({
+      where: { id: chat_id },
+      relations: ['users'],
+    });
 
-      if (!chat)
-        throw new HttpException(
-          `Chat with such id ${chat_id} doesn't exists`,
-          HttpStatus.BAD_REQUEST,
-        );
-
-      const {
-        senderDbEntry,
-        recipientsDbArr,
-      }: { senderDbEntry: User; recipientsDbArr: User[] } = chat.users.reduce(
-        (acc, user) => {
-          if (user.id === currentUserId) {
-            acc.senderDbEntry = user;
-          } else {
-            acc.recipientsDbArr.push(user);
-          }
-          return acc;
-        },
-        { senderDbEntry: null, recipientsDbArr: [] },
+    if (!chat)
+      throw new HttpException(
+        `Chat with such id ${chat_id} doesn't exists`,
+        HttpStatus.BAD_REQUEST,
       );
 
-      const message = this.create({
-        text,
-        chat,
-        sender: senderDbEntry,
-        recipients: recipientsDbArr,
-      });
+    const {
+      senderDbEntry,
+      recipientsDbArr,
+    }: { senderDbEntry: User; recipientsDbArr: User[] } = chat.users.reduce(
+      (acc, user) => {
+        if (user.id === currentUserId) {
+          acc.senderDbEntry = user;
+        } else {
+          acc.recipientsDbArr.push(user);
+        }
+        return acc;
+      },
+      { senderDbEntry: null, recipientsDbArr: [] },
+    );
 
-      const notifications = this.createMessageNotifications(
-        chat,
-        message,
-        NotificationEnum.NEW_MESSAGE,
-      );
+    const message = this.create({
+      text,
+      chat,
+      sender: senderDbEntry,
+      recipients: recipientsDbArr,
+    });
 
-      await this.saveMessageWithNotifications(message, notifications);
+    const notifications = this.createMessageNotifications(
+      chat,
+      message,
+      NotificationEnum.NEW_MESSAGE,
+    );
 
-      return {
-        message: `The message was successfully sent`,
-      };
-    } catch (error) {
-      console.log(error);
-    }
+    await this.dbTransactionService.saveEntitiesInTransaction([
+      message,
+      notifications,
+    ]);
+
+    return {
+      text,
+      sender: senderDbEntry,
+      chat_id,
+    };
   }
 
   public async getMessagesByChatId(id: string, params?: PaginationDto) {

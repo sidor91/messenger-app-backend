@@ -3,8 +3,11 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { MessageService } from './message.service';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetCurrentUserId } from 'src/@decorators/getCurrentUserId.decorator';
-import { SendMessageResponseDto, SendPrivateMessageDto } from './dto/send-private-message.dto';
+import {
+  SendPrivateMessageDto,
+} from './dto/send-private-message.dto';
 import { SendGroupMessageDto } from './dto/send-group-message.dto';
+import { SendMessageResponse } from './dto/send-message-response.dto';
 
 @ApiTags('Message API')
 @Controller('message')
@@ -15,7 +18,7 @@ export class MessageController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Send message to private chat' })
   @ApiResponse({
-    type: SendMessageResponseDto,
+    type: SendMessageResponse,
   })
   async sendPrivateMessage(
     @Body() dto: SendPrivateMessageDto,
@@ -28,7 +31,7 @@ export class MessageController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Send message to group chat' })
   @ApiResponse({
-    type: SendMessageResponseDto,
+    type: SendMessageResponse,
   })
   async sendGroupMessage(
     @Body() dto: SendGroupMessageDto,
