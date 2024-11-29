@@ -1,4 +1,11 @@
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+} from 'typeorm';
 
 import { CommonColumns } from 'src/common/entities/common.entity';
 import { Chat } from 'src/services/chat/entity/chat.entity';

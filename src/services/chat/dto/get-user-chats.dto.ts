@@ -1,8 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ChatDto } from './chat.dto';
-import { NotificationDto } from 'src/services/notification/dto/notification.dto';
+
 import { MessageDto } from 'src/services/message/dto/message.dto';
+import { NotificationDto } from 'src/services/notification/dto/notification.dto';
 import { UserDto } from 'src/services/user/dto/user.dto';
+
+import { ChatDto } from './chat.dto';
 
 class GetUserChatsDto extends ChatDto {
   @ApiProperty({

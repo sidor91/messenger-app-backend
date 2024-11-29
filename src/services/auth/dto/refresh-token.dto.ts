@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+
 import { SuccessDto } from 'src/common/dto/success.dto';
 
 export class RefreshTokenResponseDto extends SuccessDto {

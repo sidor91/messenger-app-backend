@@ -1,9 +1,12 @@
+import { FindOneOptions, Repository } from 'typeorm';
+
 import {
   HttpException,
   HttpStatus,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'express';
 
 import { JwtTokenService } from 'src/services/jwt-token/jwt-token.service';
@@ -14,10 +17,8 @@ import { UserService } from '../user/user.service';
 
 import { LoginDto } from './dto/login.dto';
 import { UserRegisterDto } from './dto/register.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Auth, PartialAuthDto } from './entity/auth.entity';
-import { FindOneOptions, Repository } from 'typeorm';
 import { ValidateUserDto } from './dto/validate-user.dto';
+import { Auth, PartialAuthDto } from './entity/auth.entity';
 
 @Injectable()
 export class AuthService {

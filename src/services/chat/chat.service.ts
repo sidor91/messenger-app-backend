@@ -10,21 +10,22 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { getPagination } from 'src/utils/pagination.util';
+
+import { MessageService } from '../message/message.service';
+import { NotificationEnum } from '../notification/dto/notification.dto';
 import { Notification } from '../notification/entity/notification.entity';
 import { NotificationService } from '../notification/notification.service';
 import { UserService } from '../user/user.service';
 
-import { Chat } from './entity/chat.entity';
-import { CreateGroupChatDto } from './dto/create-group-chat.dto';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
-import { getPagination } from 'src/utils/pagination.util';
-import { MessageService } from '../message/message.service';
 import {
   AddOrDeleteUserEnum,
   AddOrDeleteUserToChatDto,
 } from './dto/add-or-delete-user.dto';
-import { NotificationEnum } from '../notification/dto/notification.dto';
 import { ChatWithUsersDto } from './dto/chat.dto';
+import { CreateGroupChatDto } from './dto/create-group-chat.dto';
+import { Chat } from './entity/chat.entity';
 
 @Injectable()
 export class ChatService {

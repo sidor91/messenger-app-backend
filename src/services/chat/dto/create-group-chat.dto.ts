@@ -1,7 +1,9 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsArray, IsNotEmpty, IsOptional, IsString } from "class-validator";
-import { UserDto } from "src/services/user/dto/user.dto";
-import { ChatDto } from "./chat.dto";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
+import { UserDto } from 'src/services/user/dto/user.dto';
+
+import { ChatDto } from './chat.dto';
 
 export class CreateGroupChatDto {
   @ApiProperty({
@@ -19,11 +21,11 @@ export class CreateGroupChatDto {
 
   @ApiProperty({
     type: String,
-    example: 'Friends'
+    example: 'Friends',
   })
   @IsString()
   @IsOptional()
-  name?: string
+  name?: string;
 }
 
 export class CreateGroupChatResponseDto extends ChatDto {

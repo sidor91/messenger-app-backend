@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Res, Patch } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Res } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -10,12 +10,9 @@ import { Response } from 'express';
 import { GetCurrentUserId } from 'src/@decorators/getCurrentUserId.decorator';
 import { SuccessDto } from 'src/common/dto/success.dto';
 
-import {
-  UpdateUserDto,
-  UpdateUserResponseDto,
-} from './dto/update-user.dto';
-import { UserService } from './user.service';
 import { GetAllUsersResponseDto } from './dto/get-all-users.dto';
+import { UpdateUserDto, UpdateUserResponseDto } from './dto/update-user.dto';
+import { UserService } from './user.service';
 
 @ApiTags('User API')
 @Controller('user')

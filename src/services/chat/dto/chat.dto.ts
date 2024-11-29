@@ -1,6 +1,7 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { CommonColumns } from "src/common/entities/common.entity";
-import { UserDto } from "src/services/user/dto/user.dto";
+import { ApiProperty } from '@nestjs/swagger';
+
+import { CommonColumns } from 'src/common/entities/common.entity';
+import { UserDto } from 'src/services/user/dto/user.dto';
 
 export class ChatDto extends CommonColumns {
   @ApiProperty({
@@ -20,5 +21,5 @@ export class ChatDto extends CommonColumns {
 }
 
 export class ChatWithUsersDto extends ChatDto {
-users: UserDto[]
+  users: UserDto[];
 }

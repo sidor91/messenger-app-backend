@@ -1,13 +1,17 @@
 import { Body, Controller, Post } from '@nestjs/common';
-
-import { MessageService } from './message.service';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { GetCurrentUserId } from 'src/@decorators/getCurrentUserId.decorator';
 import {
-  SendPrivateMessageDto,
-} from './dto/send-private-message.dto';
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+
+import { GetCurrentUserId } from 'src/@decorators/getCurrentUserId.decorator';
+
 import { SendGroupMessageDto } from './dto/send-group-message.dto';
 import { SendMessageResponse } from './dto/send-message-response.dto';
+import { SendPrivateMessageDto } from './dto/send-private-message.dto';
+import { MessageService } from './message.service';
 
 @ApiTags('Message API')
 @Controller('message')

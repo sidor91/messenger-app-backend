@@ -1,13 +1,13 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 
 import { ChatModule } from '../chat/chat.module';
 import { JwtTokenModule } from '../jwt-token/jwt-token.module';
-
-import { WebsocketGateway } from './websocket.gateway';
 import { MessageModule } from '../message/message.module';
 
+import { WebsocketGateway } from './websocket.gateway';
+
 @Module({
-  imports: [forwardRef(() => ChatModule), JwtTokenModule, MessageModule],
+  imports: [ChatModule, JwtTokenModule, MessageModule],
   providers: [WebsocketGateway],
   exports: [WebsocketGateway],
 })

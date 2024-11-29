@@ -1,6 +1,6 @@
-export const getPagination = (dto?: { page: string, limit: string }) => {
+export const getPagination = (dto?: { page: string; limit: string }) => {
   const page = dto?.page || '1';
-  const limit = dto?.limit || '10'
+  const limit = dto?.limit || '10';
   const numberedPage = parseInt(page, 10);
   const numberedLimit = parseInt(limit, 10);
 

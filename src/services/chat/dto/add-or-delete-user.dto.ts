@@ -1,7 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ChatDto } from './chat.dto';
-import { UserDto } from 'src/services/user/dto/user.dto';
 import { IsNotEmpty, IsUUID } from 'class-validator';
+
+import { UserDto } from 'src/services/user/dto/user.dto';
+
+import { ChatDto } from './chat.dto';
 
 export enum AddOrDeleteUserEnum {
   ADD = 'add',

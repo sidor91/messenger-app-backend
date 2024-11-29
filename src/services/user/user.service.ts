@@ -39,7 +39,7 @@ export class UserService {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    const updatedUser = await this.save({...user, ...dto})
+    const updatedUser = await this.save({ ...user, ...dto });
 
     return { success: true, data: updatedUser };
   }

@@ -1,6 +1,8 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { MessageDto } from "./message.dto";
-import { UserDto } from "src/services/user/dto/user.dto";
+import { ApiProperty } from '@nestjs/swagger';
+
+import { UserDto } from 'src/services/user/dto/user.dto';
+
+import { MessageDto } from './message.dto';
 
 export class SendMessageResponse extends MessageDto {
   @ApiProperty({

@@ -1,12 +1,14 @@
-import { ApiProperty, IntersectionType, } from '@nestjs/swagger';
-
-import { SuccessDto } from 'src/common/dto/success.dto';
-
+import { ApiProperty, IntersectionType } from '@nestjs/swagger';
 import {
-  User,
-} from '../entity/user.entity';
-import { IsEmail, IsOptional, IsPhoneNumber, IsString, IsUrl } from 'class-validator';
+  IsEmail,
+  IsOptional,
+  IsPhoneNumber,
+  IsString,
+  IsUrl,
+} from 'class-validator';
+
 import { CommonDto } from 'src/common/dto/common.dto';
+import { SuccessDto } from 'src/common/dto/success.dto';
 
 export class UpdateUserDto {
   @ApiProperty({
@@ -58,7 +60,10 @@ export class UpdateUserDto {
   avatar?: string;
 }
 
-export class UpdatedUserWithCommonFields extends IntersectionType(UpdateUserDto, CommonDto){}
+export class UpdatedUserWithCommonFields extends IntersectionType(
+  UpdateUserDto,
+  CommonDto,
+) {}
 
 export class UpdateUserResponseDto extends SuccessDto {
   @ApiProperty({

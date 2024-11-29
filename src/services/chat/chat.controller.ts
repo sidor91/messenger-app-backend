@@ -7,22 +7,21 @@ import {
 } from '@nestjs/swagger';
 
 import { GetCurrentUserId } from 'src/@decorators/getCurrentUserId.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { SuccessDto } from 'src/common/dto/success.dto';
 
 import { ChatService } from './chat.service';
-
-import {
-  CreateGroupChatDto,
-  CreateGroupChatResponseDto,
-} from './dto/create-group-chat.dto';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
-import { GetUserChatsResponseDto } from './dto/get-user-chats.dto';
-import { GetChatByIdResponseDto } from './dto/get-chat.dto';
 import {
   AddOrDeleteUserEnum,
   AddOrDeleteUserToChatDto,
   AddUserToChatResponseDto,
 } from './dto/add-or-delete-user.dto';
-import { SuccessDto } from 'src/common/dto/success.dto';
+import {
+  CreateGroupChatDto,
+  CreateGroupChatResponseDto,
+} from './dto/create-group-chat.dto';
+import { GetChatByIdResponseDto } from './dto/get-chat.dto';
+import { GetUserChatsResponseDto } from './dto/get-user-chats.dto';
 
 @ApiTags('Chat API')
 @Controller('chat')

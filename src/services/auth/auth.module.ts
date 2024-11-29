@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { PassportModule } from '@nestjs/passport';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { JwtAccessAuthGuard } from 'src/@guards/jwt-access-auth.guard';
 
@@ -10,16 +11,15 @@ import { UserModule } from '../user/user.module';
 
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { JwtStrategy } from './strategies/jwt.strategy';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { Auth } from './entity/auth.entity';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
     UserModule,
     JwtTokenModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    TypeOrmModule.forFeature([Auth])
+    TypeOrmModule.forFeature([Auth]),
   ],
   providers: [
     AuthService,

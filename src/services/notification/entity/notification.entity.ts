@@ -4,6 +4,7 @@ import { CommonColumns } from 'src/common/entities/common.entity';
 import { Chat } from 'src/services/chat/entity/chat.entity';
 import { Message } from 'src/services/message/entity/message.entity';
 import { User } from 'src/services/user/entity/user.entity';
+
 import { NotificationEnum } from '../dto/notification.dto';
 
 @Entity({ name: 'notifications' })
@@ -23,7 +24,7 @@ export class Notification extends CommonColumns {
   @JoinColumn({ name: 'recipient_id', referencedColumnName: 'id' })
   recipient: User;
 
-  @ManyToOne(() => Message, (message) => message.id, {onDelete: 'CASCADE'})
+  @ManyToOne(() => Message, (message) => message.id, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'message_id', referencedColumnName: 'id' })
   message?: Message;
 }
