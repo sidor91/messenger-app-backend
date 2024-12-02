@@ -16,11 +16,11 @@ export class Notification extends CommonColumns {
   })
   type: NotificationEnum;
 
-  @ManyToOne(() => Chat, (chat) => chat.id)
+  @ManyToOne(() => Chat, (chat) => chat.id, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'chat_id', referencedColumnName: 'id' })
   chat: Chat;
 
-  @ManyToOne(() => User, (user) => user.id)
+  @ManyToOne(() => User, (user) => user.id, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'recipient_id', referencedColumnName: 'id' })
   recipient: User;
 
