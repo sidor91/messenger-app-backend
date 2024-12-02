@@ -15,7 +15,8 @@ export class JwtRefreshAuthGuard extends AuthGuard('jwt') {
     super();
   }
   async canActivate(context: ExecutionContext) {
-    const request = context.switchToHttp().getRequest();
+
+    const request = this.getRequest(context);
 
     const token = request.cookies['refresh_token'];
 
@@ -38,5 +39,14 @@ export class JwtRefreshAuthGuard extends AuthGuard('jwt') {
       throw err || new UnauthorizedException();
     }
     return user;
+  }
+
+  getRequest(context: ExecutionContext) {
+    if (context.getType() === 'http') {
+      return context.switchToHttp().getRequest();
+    } else if (context.getType() === 'ws') {
+      return context.switchToWs().getClient();
+    }
+    throw new UnauthorizedException('Unsupported connection type');
   }
 }
