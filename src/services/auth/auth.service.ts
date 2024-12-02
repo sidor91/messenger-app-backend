@@ -68,26 +68,25 @@ export class AuthService {
 
     const password_hash = await this.cryptoService.hashPassword(password);
 
-    const newUser = this.userService.create({
-      username,
-      email,
-      phone,
-      ...restDto,
-    });
-
-    const tokens = await this.jwtTokenService.generateTokens({
-      id: newUser.id,
-      email,
-      password_hash,
-    });
-
     const queryRunner =
       this.authRepository.manager.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      await queryRunner.manager.save(newUser);
+      const newUser = this.userService.create({
+        username,
+        email,
+        phone,
+        ...restDto,
+      });
+      const createdUser = await queryRunner.manager.save(newUser);
+
+      const tokens = await this.jwtTokenService.generateTokens({
+        id: newUser.id,
+        email,
+        password_hash,
+      });
 
       const authEntity = this.authRepository.create({
         ...tokens,
@@ -100,10 +99,7 @@ export class AuthService {
 
       setCookies(tokens.refresh_token, response);
 
-      return {
-        success: true,
-        data: { ...newUser, access_token: tokens.access_token },
-      };
+      return { ...createdUser, access_token: tokens.access_token };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw new HttpException(
