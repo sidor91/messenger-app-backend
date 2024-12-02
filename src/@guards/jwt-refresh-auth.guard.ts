@@ -15,7 +15,6 @@ export class JwtRefreshAuthGuard extends AuthGuard('jwt') {
     super();
   }
   async canActivate(context: ExecutionContext) {
-
     const request = this.getRequest(context);
 
     const token = request.cookies['refresh_token'];

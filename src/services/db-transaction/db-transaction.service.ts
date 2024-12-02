@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
 
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+
 import { Chat } from '../chat/entity/chat.entity';
 import { Message } from '../message/entity/message.entity';
 import { Notification } from '../notification/entity/notification.entity';
@@ -48,7 +49,7 @@ export class DbTransactionService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
-    let result: Partial<EntitiesType> = {};
+    const result: Partial<EntitiesType> = {};
 
     try {
       for (const key of saveOrder) {

@@ -1,4 +1,4 @@
-import { ArrayContains, Brackets, FindOneOptions, In, Repository } from 'typeorm';
+import { Brackets, FindOneOptions, In, Repository } from 'typeorm';
 
 import {
   forwardRef,
@@ -231,8 +231,8 @@ export class ChatService {
       .andWhere('user.id IN (:...userIds)', { userIds })
       .groupBy('chat.id')
       .having('COUNT(user.id) = :userCount', { userCount: userIds.length })
-      .getOne(); 
-    return chat
+      .getOne();
+    return chat;
   }
 
   private createChatNotifications(
