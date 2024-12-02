@@ -1,4 +1,4 @@
-import { Brackets, FindOneOptions, In, Repository } from 'typeorm';
+import { ArrayContains, Brackets, FindOneOptions, In, Repository } from 'typeorm';
 
 import {
   forwardRef,
@@ -221,6 +221,18 @@ export class ChatService {
     }
 
     return await this.saveChatWithNotifications(chat, notifications);
+  }
+
+  public async checkIsPrivateChatExists(userIds: string[]) {
+    const chat = await this.chatRepository
+      .createQueryBuilder('chat')
+      .innerJoin('chat.users', 'user')
+      .where('chat.is_group_chat = :is_group_chat', { is_group_chat: false })
+      .andWhere('user.id IN (:...userIds)', { userIds })
+      .groupBy('chat.id')
+      .having('COUNT(user.id) = :userCount', { userCount: userIds.length })
+      .getOne(); 
+    return chat
   }
 
   private createChatNotifications(

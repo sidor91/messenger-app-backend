@@ -14,7 +14,6 @@ import { getPagination } from 'src/utils/pagination.util';
 
 import { ChatService } from '../chat/chat.service';
 import { Chat } from '../chat/entity/chat.entity';
-import { DbTransactionService } from '../db-transaction/db-transaction.service';
 import { NotificationEnum } from '../notification/dto/notification.dto';
 import { Notification } from '../notification/entity/notification.entity';
 import { NotificationService } from '../notification/notification.service';
@@ -25,6 +24,10 @@ import { SendGroupMessageDto } from './dto/send-group-message.dto';
 import { SendMessageResponse } from './dto/send-message-response.dto';
 import { SendPrivateMessageDto } from './dto/send-private-message.dto';
 import { Message } from './entity/message.entity';
+import {
+  DbTransactionService,
+  SingleEntityValue,
+} from '../db-transaction/db-transaction.service';
 
 @Injectable()
 export class MessageService {
@@ -84,30 +87,40 @@ export class MessageService {
       );
     }
 
+    const users = await this.userService.findAll({
+      where: { id: In([recipient, currentUserId]) },
+    });
+
+    if (users.length < 2)
+      throw new HttpException(`Recipient not found`, HttpStatus.NOT_FOUND);
+
     let chat: Chat;
 
     if (chat_id) {
       chat = await this.chatService.findOne({
         where: { id: chat_id },
-        relations: ['users'],
       });
       if (!chat)
         throw new HttpException(
           `Chat with such id ${chat_id} doesn't exists`,
-          HttpStatus.BAD_REQUEST,
+          HttpStatus.NOT_FOUND,
         );
     } else {
-      const users = await this.userService.findAll({
-        where: { id: In([recipient, currentUserId]) },
-      });
-
-      if (users.length < 2)
-        throw new HttpException(`Recipient not found`, HttpStatus.NOT_FOUND);
-
-      chat = this.chatService.create({ users, is_group_chat: false });
+      const existingChat = await this.chatService.checkIsPrivateChatExists([
+        recipient,
+        currentUserId,
+      ]);
+      if (existingChat) {
+        chat = existingChat;
+      } else {
+        chat = this.chatService.create({
+          users,
+          is_group_chat: false,
+        });
+      }
     }
 
-    const { senderDbEntry, recipientDbEntry } = chat.users.reduce(
+    const { senderDbEntry, recipientDbEntry } = users.reduce(
       (acc, user) => {
         if (user.id === currentUserId) {
           acc.senderDbEntry = user;
@@ -133,20 +146,17 @@ export class MessageService {
       type: NotificationEnum.NEW_MESSAGE,
     });
 
-    await this.dbTransactionService.saveEntitiesInTransaction([
-      chat,
-      message,
-      notification,
-    ]);
+    const result = await this.dbTransactionService.saveEntitiesInTransaction(
+      { message, chat, notification },
+      ['chat', 'message', 'notification'],
+    );
 
-    const response = {
-      message_id: message.id,
+    return {
+      message_id: (result.message as SingleEntityValue).id,
       text,
       sender: senderDbEntry,
-      chat_id: chat.id,
+      chat_id: (result.chat as SingleEntityValue).id,
     };
-
-    return response;
   }
 
   public async sendGroupMessage(
@@ -193,13 +203,13 @@ export class MessageService {
       message,
       NotificationEnum.NEW_MESSAGE,
     );
-
-    await this.dbTransactionService.saveEntitiesInTransaction([
-      message,
-      notifications,
-    ]);
+    const result = await this.dbTransactionService.saveEntitiesInTransaction(
+      { message, notification: notifications },
+      ['message', 'notification'],
+    );
 
     return {
+      message_id: (result.message as SingleEntityValue).id,
       text,
       sender: senderDbEntry,
       chat_id,
@@ -238,30 +248,5 @@ export class MessageService {
         chat,
       }),
     );
-  }
-
-  private async saveMessageWithNotifications(
-    message: Message,
-    notifications: Notification[],
-  ): Promise<Message> {
-    const queryRunner =
-      this.messageRepository.manager.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      await queryRunner.manager.save(message);
-      await queryRunner.manager.save(notifications);
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw new HttpException(
-        `${error.message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    } finally {
-      await queryRunner.release();
-    }
-
-    return message;
   }
 }
