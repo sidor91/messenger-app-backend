@@ -60,7 +60,7 @@ export class DbTransactionService {
           const restEntities: MultiplyEntityValue = [];
           for (const item of entity) {
             if ('id' in item) {
-              result[key].push(item);
+              (result[key] as MultiplyEntityValue).push(item);
               continue;
             } else {
               restEntities.push(item);
@@ -75,7 +75,7 @@ export class DbTransactionService {
             const savedData = await queryRunner.manager.save(processedEntity);
             if (Array.isArray(savedData)) {
               for (const item of savedData) {
-                result[key].push(item);
+                (result[key] as MultiplyEntityValue).push(item);
               }
             }
           }
